@@ -2,9 +2,14 @@
   import { app } from '$lib/state/app.svelte.js';
   import { registry } from '$lib/registry/blocks.js';
 
+  import * as Dialog from "$lib/components/ui/dialog";
+  import * as Command from "$lib/components/ui/command";
+
   const map = Object.fromEntries(
     registry.map(r => [r.type, r.component])
   );
+
+  let open = $state(false);
 
   function addBlock(type) {
     app.blocks.push({
@@ -40,17 +45,47 @@
   <h1 class="text-xl font-bold">{app.form.title}</h1>
 </div>
 
-<!-- ADD BLOCK BAR -->
-<div class="p-4 flex gap-2 border-b flex-wrap">
-  {#each registry as blockType}
-    <button
-      class="px-3 py-1 bg-blue-600 text-white rounded"
-      onclick={() => addBlock(blockType.type)}
-    >
-      + {blockType.label}
-    </button>
-  {/each}
+<!-- ADD BLOCK BUTTON -->
+<div class="p-4 border-b">
+  <button
+    class="px-3 py-2 bg-black text-white rounded"
+    onclick={() => open = true}
+  >
+    + Add block
+  </button>
 </div>
+
+<Dialog.Root bind:open>
+  <Dialog.Content class="max-w-2xl p-6">
+
+    <h2 class="text-lg font-semibold mb-4">
+      Add a block
+    </h2>
+
+    <div class="grid grid-cols-3 gap-3">
+      {#each registry as blockType}
+        <button
+          class="p-4 rounded-lg text-white text-left shadow hover:scale-[1.02] transition"
+          style={`background-color: ${blockType.color}`}
+          onclick={() => {
+            addBlock(blockType.type);
+            open = false;
+          }}
+        >
+          <div class="text-sm opacity-80">
+            {blockType.type}
+          </div>
+
+          <div class="text-base font-bold">
+            {blockType.label}
+          </div>
+        </button>
+      {/each}
+    </div>
+
+  </Dialog.Content>
+</Dialog.Root>
+
 
 <!-- CANVAS -->
 <div class="p-6 space-y-6">
@@ -79,7 +114,7 @@
         placeholder="Description"
       ></textarea>
 
-      <!-- block preview -->
+      <!-- preview -->
       {#if Component}
         <div class="pt-2 border-t">
           <Component {block} />
