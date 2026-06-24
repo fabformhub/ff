@@ -6,7 +6,12 @@
 </script>
 
 <div class="min-h-screen flex flex-col items-center bg-gradient-to-br from-slate-100 via-white to-slate-100 text-slate-800 relative">
-
+<a
+  href="/test"
+  class="text-blue-500 hover:text-blue-700 underline font-medium"
+>
+  Test
+</a>
   <!-- SMALL ICON TRIGGER AT TOP RIGHT -->
   <Dialog.Root>
 
