@@ -1,27 +1,10 @@
 export const app = $state({
   form: {
     title: "Untitled form",
-    description: "",
-    styles: {}
+    description: ""
   },
 
-  blocks: [
-    {
-      id: crypto.randomUUID(),
-      type: "ShortText",
-      title: "Name",
-      description: "",
-      styles: {}
-    },
-    {
-      id: crypto.randomUUID(),
-      type: "Statement",
-      title: "Welcome",
-      description: "Thanks for visiting",
-      styles: {
-        backgroundColor: "#2563eb",
-        color: "#ffffff"
-      }
-    }
-  ]
+  selectedBlockId: null,
+
+  blocks: []
 });
