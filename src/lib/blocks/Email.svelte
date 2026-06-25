@@ -8,4 +8,4 @@
   <label for="file" class="cursor-pointer">
     Click to upload file
   </label>
-/div>
+</div>
