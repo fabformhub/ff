@@ -1,0 +1,1 @@
+import{t as e}from"./Blh2ONyS.js";var t=e=>({success:!0,data:e}),n=e=>({success:!1,error:e?.message||e||`Unknown error`});async function r(r){if(!r)return n(`Email is required`);let{data:i,error:a}=await e.from(`subscribers`).select(`id, email, created_at`).eq(`email`,r).maybeSingle();return a?n(a):t({subscribed:!!i,subscriber:i||null})}export{r as t};
