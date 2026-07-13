@@ -1,56 +1,111 @@
 <script>
-  import { toast } from 'svelte-sonner';
-  import { CopyLinkButton } from '$lib/ui';
+  import { CopyLinkButton, Dropdown } from '$lib/ui';
+  import { Clipboard } from '@lucide/svelte';
   import { tooltip } from '$lib/utils/tooltip.js';
-  import { DefaultLayout } from '$lib/fabform/layouts/';
+  import { DefaultLayout } from '$lib/layouts';
   import { APP_URL } from '$lib/utils/global.js';
-  
-  import { page } from '$app/state';   
+  import { page } from '$app/state';
+  import { toast } from 'svelte-sonner';
+
   const formId = $derived(page.params.id);
 
+  const url = $derived(`${APP_URL}/f/${formId}`);
+
   let embedChoice = $state('Inline Embed');
-  let dropdownOpen = $state(false);
-  // Derived states
-  let url = $derived.by(() => `${APP_URL}/f/${formId}`);
-  let embedCode = $derived.by(() => {
+
+  const embedCode = $derived.by(() => {
     switch (embedChoice) {
       case 'Inline Embed':
-        return `<iframe src="${url}" style="width:100%; height:300px;" frameborder="0"></iframe>`;
+        return `<iframe src="${url}" width="100%" height="600" frameborder="0"></iframe>`;
+
       case 'Popup':
-        return `<button onclick="window.open('${url}', '_blank', 'width=600,height=400')">Open Form</button>`;
+        return `<button onclick="window.open('${url}','_blank','width=600,height=700')">
+  Open Form
+</button>`;
+
       case 'Fullpage':
-        return `<a href="${url}" target="_blank">Go to Fullpage Form</a>`;
+        return `<a href="${url}" target="_blank" rel="noopener noreferrer">
+  Open Form
+</a>`;
+
       default:
         return '';
     }
   });
-  // Copy handler
+
   async function copyCode() {
     try {
       await navigator.clipboard.writeText(embedCode);
-      toast.success('Code Copied!');
+
+      toast.success('Embed code copied!');
     } catch (err) {
-      console.error('[COPY] failed', err);
       toast.error('Failed to copy code');
+      console.error(err);
     }
   }
 </script>
-<DefaultLayout bind:formId={formId} activeMenuLabel="Share">
-  <div class="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-6 py-12">
-    <div class="w-full max-w-4xl space-y-6 bg-white p-8 rounded-2xl shadow-xl border border-gray-200">
-      <!-- Link + Copy -->
-      <div class="flex flex-col space-y-4 items-center md:items-start">
-        <div class="w-full flex flex-col md:flex-row md:items-center md:space-x-2 space-y-2 md:space-y-0">
+
+<DefaultLayout {formId} activeMenuLabel="Share">
+  <div class="min-h-screen bg-gray-50 px-6 py-12">
+    <div class="mx-auto max-w-4xl rounded-2xl border border-gray-200 bg-white p-8 shadow-xl">
+
+      <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">
+          Share your form
+        </h1>
+
+        <p class="mt-2 text-gray-600">
+          Share your form with a direct link or embed it on your website.
+        </p>
+      </div>
+
+      <div class="space-y-6">
+
+        <!-- Form URL -->
+        <div class="flex flex-col gap-3 md:flex-row">
           <input
-            class="w-full md:w-80 px-3 py-2 rounded-md border border-gray-300 text-gray-800 text-sm"
-            type="text"
+            class="flex-1 rounded-lg border border-gray-300 px-4 py-3 text-sm text-gray-800 focus:border-blue-500 focus:outline-none"
             readonly
             value={url}
           />
+
           <CopyLinkButton link={url} />
         </div>
-        <!-- Hardcoded Dropdown -->
-        <div class="relative inline-block text-left">
-          <button
-            class="inline-flex justify-between w-40 rounded-md bg-gray-800 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700 focus:outline-none"
-            on:click={() => (dropdownOpen
+
+        <!-- Embed Type -->
+        <div class="max-w-xs">
+          <Dropdown
+            choices={['Inline Embed', 'Popup', 'Fullpage']}
+            bind:value={embedChoice}
+          />
+        </div>
+
+        <!-- Embed Code -->
+        <div class="overflow-hidden rounded-xl border border-slate-800 bg-slate-900">
+
+          <div class="flex items-center justify-between border-b border-slate-700 px-4 py-3">
+            <span class="text-sm font-medium text-slate-300">
+              Embed Code
+            </span>
+
+            <button
+              use:tooltip={{ text: 'Copy code', position: 'bottom' }}
+              onclick={copyCode}
+              class="rounded-md p-2 text-slate-300 transition hover:bg-slate-700 hover:text-white"
+              aria-label="Copy embed code"
+            >
+              <Clipboard class="h-5 w-5" />
+            </button>
+          </div>
+
+          <pre class="overflow-auto p-5 text-sm leading-6 text-green-300">
+<code>{embedCode}</code>
+          </pre>
+
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</DefaultLayout>
