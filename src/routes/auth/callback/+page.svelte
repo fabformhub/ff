@@ -13,15 +13,15 @@
     // small intentional UX delay (feels “secure processing”)
     setTimeout(() => {
       stage = 2;
-    }, 500);
+    }, 700);
 
     setTimeout(() => {
       stage = 3;
-    }, 500);
+    }, 700);
 
     setTimeout(() => {
       goto('/dashboard');
-    }, 500);
+    }, 700);
   });
 </script>
 
