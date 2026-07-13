@@ -5,8 +5,8 @@
   import { Inbox, Download, Trash } from '@lucide/svelte';
   import { DefaultLayout } from '$lib/layouts/';
   import { blockRegistry } from '$lib/utils/blockRegistry.js';
-  import { route } from 'sv-router';
-  const formId = $state(route.params.id);
+  import { page } from '$app/state';   
+  const formId = $derived(page.params.id);
 
   let responses = $state([]);
   let error;

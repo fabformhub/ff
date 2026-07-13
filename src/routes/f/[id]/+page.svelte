@@ -6,9 +6,9 @@
 	import { SplashScreen } from '$lib/ui';
 	import { getForm, incrementFormViews, getBlocksByFormId } from '$lib/services/formService.js';
 	import { createResponse } from '$lib/services/responseService.js';
-	import { validateBlock } from '$lib/utils/validation.js';
-        import { route } from 'sv-router';
-        const formId = $state(route.params.id);
+ 	import { validateBlock } from '$lib/utils/validation.js';
+        import { page } from '$app/state';   
+        const formId = $derived(page.params.id);
 
 	let showSplash = $state(true);
 	let errorMessage = $state('');

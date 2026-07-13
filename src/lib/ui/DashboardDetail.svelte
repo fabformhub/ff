@@ -1,8 +1,7 @@
 <script>
   import Eye from '@lucide/svelte/icons/eye';
   import DropdownButton from './DropdownButton.svelte';
-  import { navigate } from '$lib/routes.js';
-
+  import { goto } from '$app/navigation';
   let {
     form,
     responseCount = 0,
@@ -23,7 +22,7 @@
   <!-- Top section -->
   <button
     type="button"
-    onclick={() => navigate('/form/build/' + form.id)}
+    onclick={() => goto('/form/build/' + form.id)}
     class="card-top"
   >
     <h2 class="card-title">{form.name}</h2>
@@ -38,7 +37,7 @@
   <div class="card-bottom">
     <button
       type="button"
-      onclick={() => navigate('/responses/' + form.id)}
+      onclick={() => goto('/responses/' + form.id)}
       class="responses-link"
     >
       {responseCount} response{responseCount === 1 ? '' : 's'}

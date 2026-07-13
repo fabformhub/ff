@@ -10,8 +10,8 @@
   import { createBlock, getBlocksByFormId, updateBlock, deleteBlockById, getForm, updateForm } from "$lib/services/formService.js";
 
   import { debounce } from "$lib/utils/debounce.js";
-  import { route } from 'sv-router';
-  const formId = $state(route.params.id);
+  import { page } from '$app/state';   
+  const formId = $derived(page.params.id);
 
   // ---------------------------------------------------------
   // REACTIVE SHELLS (KISS)

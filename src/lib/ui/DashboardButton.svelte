@@ -1,11 +1,10 @@
 <script>
   import ArrowLeft from '@lucide/svelte/icons/arrow-left';
-  import { navigate } from '$lib/router.js';
-  
+  import { goto } from '$app/navigation';
+ 
  function goDashboard() {
-    navigate('/dashboard'); 
+    goto('/dashboard'); 
   }
-
 </script>
 
 <div class="group relative inline-block m-1">
