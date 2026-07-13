@@ -2,16 +2,16 @@
   import { toast } from 'svelte-sonner';
   import { CopyLinkButton } from '$lib/ui';
   import { tooltip } from '$lib/utils/tooltip.js';
-  import { DefaultLayout } from '$lib/layouts';
+  import { DefaultLayout } from '$lib/fabform/layouts/';
   import { APP_URL } from '$lib/utils/global.js';
-  // Props
-  let { route } = $props();
-  // States
-  let formId = $state(route?.result?.path?.params?.id ?? '');
+  
+  import { page } from '$app/state';   
+  const formId = $derived(page.params.id);
+
   let embedChoice = $state('Inline Embed');
   let dropdownOpen = $state(false);
   // Derived states
-  let url = $derived.by(() => `${APP_URL}/v/${formId}`);
+  let url = $derived.by(() => `${APP_URL}/f/${formId}`);
   let embedCode = $derived.by(() => {
     switch (embedChoice) {
       case 'Inline Embed':
@@ -53,41 +53,4 @@
         <div class="relative inline-block text-left">
           <button
             class="inline-flex justify-between w-40 rounded-md bg-gray-800 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700 focus:outline-none"
-            on:click={() => (dropdownOpen = !dropdownOpen)}
-          >
-            {embedChoice}
-            <svg class="ml-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 8l4 4 4-4" />
-            </svg>
-          </button>
-          {#if dropdownOpen}
-            <div class="absolute mt-2 w-40 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 z-10">
-              <div class="py-1">
-                {#each ['Inline Embed', 'Popup', 'Fullpage'] as choice}
-                  <button
-                    class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
-                    on:click={() => { embedChoice = choice; dropdownOpen = false; }}
-                  >
-                    {choice}
-                  </button>
-                {/each}
-              </div>
-            </div>
-          {/if}
-        </div>
-      </div>
-      <!-- Embed Code Display -->
-      <div class="relative bg-gray-900 rounded-lg p-4 text-sm font-mono text-white overflow-auto max-h-[300px]">
-        <pre class="whitespace-pre-wrap break-all">{embedCode}</pre>
-        <button
-          use:tooltip={{ text: 'Copy code', position: 'bottom' }}
-          class="absolute bottom-2 right-2 p-1 rounded hover:bg-gray-700 transition"
-          aria-label="Copy code"
-          on:click={copyCode}
-        >
-          <Clipboard class="w-5 h-5 text-white" />
-        </button>
-      </div>
-    </div>
-  </div>
-</DefaultLayout>
+            on:click={() => (dropdownOpen
