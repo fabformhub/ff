@@ -6,7 +6,7 @@
   import { countResponsesByFormId } from '$lib/services/responseService.js';
   import { DashboardDetail } from '$lib/ui';
   import { Dialog, RenameDialog, RenameSlugDialog, QRCodeDialog } from '$lib/dialogs';
-  import { Navbar } from '$lib/layouts';
+  import { AccountMenu } from '$lib/layouts';
   import { openDialog } from '$lib/utils/dialog.svelte.js';
   import { blockRegistry } from '$lib/utils/blockRegistry';
   import { APP_URL } from '$lib/utils/global.js';
@@ -247,7 +247,7 @@
   />
 </svelte:head>
 
-<Navbar />
+<AccountMenu />
 
 <div class="dash">
   <Dialog />
