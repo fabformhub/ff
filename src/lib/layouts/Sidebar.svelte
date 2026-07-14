@@ -17,60 +17,56 @@
   const WELCOME_TYPE_ID = 1;
   const THANK_YOU_TYPE_ID = 99;
 
-  function selectItem(id, i) {
-    blockNo = i;
-    changeBlock(i);
+  // Welcome and Thank You are fixed-position blocks: always first/last,
+  // never draggable. Everything else is a normal, reorderable block.
+  function isFixedBlock(block) {
+    return block.meta.blockTypeId === WELCOME_TYPE_ID || block.meta.blockTypeId === THANK_YOU_TYPE_ID;
   }
 
-  // Only the "normal" blocks are draggable. Welcome/Thank You stay pinned
-  // at the start/end and never enter the dndzone, so they can't be reordered.
   let welcomeBlock = $derived(blocks.find(b => b.meta.blockTypeId === WELCOME_TYPE_ID));
   let thankYouBlock = $derived(blocks.find(b => b.meta.blockTypeId === THANK_YOU_TYPE_ID));
-  let normalBlocks = $derived(
-    blocks.filter(
-      b => b.meta.blockTypeId !== WELCOME_TYPE_ID && b.meta.blockTypeId !== THANK_YOU_TYPE_ID
-    )
-  );
+  let normalBlocks = $derived(blocks.filter(b => !isFixedBlock(b)));
 
-  function handleDndConsider(e) {
-    normalBlocks = e.detail.items;
-  }
-
-  function handleDndFinalize(e) {
-    normalBlocks = e.detail.items;
-
-    // Rebuild the full list in fixed order: Welcome, reordered normals, Thank You.
-    const rebuilt = [
-      ...(welcomeBlock ? [welcomeBlock] : []),
-      ...normalBlocks,
-      ...(thankYouBlock ? [thankYouBlock] : [])
-    ].map((block, index) => ({ ...block, position: index + 1 }));
-
-    blocks = rebuilt;
-    updateBlockPositions?.(rebuilt);
+  function selectBlock(block) {
+    const i = blocks.findIndex(b => b.id === block.id);
+    blockNo = i;
+    changeBlock(i);
   }
 
   function getRegistry(block) {
     return blockRegistry.find(r => r.blockTypeId === block.meta.blockTypeId);
   }
 
-  function indexOfBlock(block) {
-    return blocks.findIndex(b => b.id === block.id);
+  // Only normal blocks pass through the dndzone, so dragging can only
+  // ever reorder them - Welcome/Thank You stay pinned at the ends.
+  function handleDndConsider(e) {
+    normalBlocks = e.detail.items;
+  }
+
+  function handleDndFinalize(e) {
+    const reordered = [welcomeBlock, ...e.detail.items, thankYouBlock]
+      .filter(Boolean)
+      .map((block, index) => ({ ...block, position: index + 1 }));
+
+    blocks = reordered;
+    updateBlockPositions?.(reordered);
   }
 </script>
 
-{#snippet blockRow(block)}
-  {#if getRegistry(block)}
+{#snippet blockRow(block, label)}
+  {@const registry = getRegistry(block)}
+  {#if registry}
+    {#if label}<p class="text-gray-500 font-semibold mt-2 mb-1">{label}</p>{/if}
     <div
-      on:click={() => selectItem(block.id, indexOfBlock(block))}
+      on:click={() => selectBlock(block)}
       class={`block-draggable w-full sm:w-72 flex items-center justify-between gap-2 p-2 rounded-md transition-all h-16 group
-              ${getRegistry(block)?.bgColor ?? ''}
-              ${blockNo === indexOfBlock(block) ? 'border-2 shadow-lg scale-105' : 'border border-gray-300 shadow-sm my-2'}`}
+              ${registry.bgColor ?? ''}
+              ${blocks[blockNo]?.id === block.id ? 'border-2 shadow-lg scale-105' : 'border border-gray-300 shadow-sm my-2'}`}
     >
       <div class="flex items-center gap-1 flex-1 text-sm text-gray-800">
         <div class="shrink-0">
-          {#if getRegistry(block)?.icon}
-            <svelte:component this={getRegistry(block).icon} class="w-5 h-5 text-blue-600" />
+          {#if registry.icon}
+            <svelte:component this={registry.icon} class="w-5 h-5 text-blue-600" />
           {/if}
         </div>
         <span class="truncate mx-2 block">
@@ -91,12 +87,7 @@
 
 <section class="p-2 space-y-1 min-h-[100px] pb-20 overflow-hidden">
   {#if welcomeBlock}
-    <p class="text-gray-500 font-semibold mt-2 mb-1">Welcome</p>
-    <div>{@render blockRow(welcomeBlock)}</div>
-  {/if}
-
-  {#if normalBlocks.length}
-    <p class="text-gray-500 font-semibold mt-2 mb-1">Blocks</p>
+    {@render blockRow(welcomeBlock, 'Welcome')}
   {/if}
 
   <div
@@ -104,16 +95,15 @@
     on:consider={handleDndConsider}
     on:finalize={handleDndFinalize}
   >
-    {#each normalBlocks as block (block.id)}
+    {#each normalBlocks as block, i (block.id)}
       <div animate:flip={{ duration: flipDurationMs }}>
-        {@render blockRow(block)}
+        {@render blockRow(block, i === 0 ? 'Blocks' : null)}
       </div>
     {/each}
   </div>
 
   {#if thankYouBlock}
-    <p class="text-gray-500 font-semibold mt-2 mb-1">Thank You Page</p>
-    <div>{@render blockRow(thankYouBlock)}</div>
+    {@render blockRow(thankYouBlock, 'Thank You Page')}
   {/if}
 </section>
 
