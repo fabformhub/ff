@@ -1,4 +1,5 @@
 <script>
+
   import { getContext } from 'svelte';
   import { blockRegistry} from "$lib/utils/blockRegistry.js";
   import { X } from '@lucide/svelte';

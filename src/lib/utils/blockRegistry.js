@@ -337,7 +337,7 @@ export const blockRegistry = [
     validation: { required: false },
     props: {},
     coverImageProps: createCoverImageProps(),
-    bgColor: bgColors[12],
+    bgColor: bgColors[22],
     icon: Signature
   },
 
@@ -351,7 +351,7 @@ export const blockRegistry = [
     buttonText: 'Submit',
     textAlign: 'center',
     coverImageProps: createCoverImageProps(),
-    bgColor: bgColors[20],
+    bgColor: bgColors[23],
     icon: PartyPopper
   }
 ]

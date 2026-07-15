@@ -25,4 +25,5 @@ export const bgColors = [
     'bg-yellow-200',
     'bg-green-200'
   ];
-  
+
+
