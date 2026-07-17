@@ -1,23 +1,20 @@
 <script>
   import { onMount, setContext } from "svelte";
-  import { DefaultLayout, Sidebar } from "$lib/layouts";
-  import { FormView, BlockPicker } from "$lib/form-builder";
+  import { Sidebar,Menu,SubMenu } from "$lib/layouts"
+  import { FormView, BlockPicker } from "$lib/form-builder"
   import { AddBlockButton } from "$lib//ui";
   import { Dialog } from "$lib/dialogs";
   import { FormProperties } from "$lib/form-properties";
   import { BlockProperties } from "$lib/block-properties";
   import { openDialog } from "$lib/utils/dialog.svelte.js";
   import { createBlock, getBlocksByFormId, updateBlock, deleteBlockById, getForm, updateForm } from "$lib/services/formService.js";
-
+  import { goto } from '$app/navigation';
   import { debounce } from "$lib/utils/debounce.js";
   import { page } from '$app/state';   
   const formId = $derived(page.params.id);
-
-  // ---------------------------------------------------------
-  // REACTIVE SHELLS (KISS)
-  // ---------------------------------------------------------
-
+  let showDesign = $state(false);
   let showBlockPicker = $state(false);
+  
   let blocks = $state([]);
   let blockNo = $state(0);
 
@@ -209,14 +206,14 @@
   <p class="text-gray-500 p-4">Loading form...</p>
 
 {:else}
-  <DefaultLayout {form}>
     <main class="flex flex-col h-[100dvh] isolate">
+	<Menu {formId} />
 
-      <div class="flex justify-center">
-        <AddBlockButton largeIcon clickHandler={() => showBlockPicker = true} />
-      </div>
+<SubMenu  onBlock={() => showBlockPicker= !showBlockPicker }
+onDesign={() => showDesign = !showDesign}
+onEmail={() => { goto(`/form/${formId}/settings/email`)}} />  
 
-      <FormProperties bind:form />
+<FormProperties bind:form bind:open={showDesign} />
 
       <BlockPicker
         show={showBlockPicker}
@@ -269,6 +266,5 @@
 
       </div>
     </main>
-  </DefaultLayout>
 {/if}
 

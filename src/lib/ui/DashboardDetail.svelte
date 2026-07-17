@@ -22,7 +22,7 @@
   <!-- Top section -->
   <button
     type="button"
-    onclick={() => goto('/form/build/' + form.id)}
+    onclick={() => goto('/build/' + form.id)}
     class="card-top"
   >
     <h2 class="card-title">{form.name}</h2>

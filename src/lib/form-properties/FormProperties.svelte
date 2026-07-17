@@ -1,10 +1,7 @@
 <script>
-  let { form = $bindable() } = $props();
-
+  let { form = $bindable(), open = $bindable(false) } = $props();
   import { loadGoogleFont } from "$lib/fontLoader";
-  import Palette from "@lucide/svelte/icons/palette";
-  import X  from "@lucide/svelte/icons/x";
-
+  import X from "@lucide/svelte/icons/x";
   import { Dropdown } from "$lib/ui/";
   import { ImageUploader } from "$lib/ui";
 
@@ -47,8 +44,7 @@
     loadGoogleFont(font);
   });
 
-  // --- self-contained drawer state (no Sheet.* primitives) ---
-  let open = $state(false);
+  // --- drawer behavior (open state comes from parent via bind:open) ---
   let panelEl;
 
   function closeDrawer() {
@@ -71,18 +67,6 @@
 </script>
 
 <svelte:window onkeydown={handleKeydown} />
-
-<!-- CENTERED TRIGGER -->
-<div class="flex justify-center w-full py-6">
-  <button
-    type="button"
-    class="flex items-center gap-2 border border-gray-200 bg-white hover:bg-gray-50 text-gray-900 px-3 py-1.5 rounded-md shadow-sm text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 focus-visible:ring-offset-2"
-    onclick={() => (open = true)}
-  >
-    <Palette class="h-4 w-4 text-gray-600" />
-    <span>Design</span>
-  </button>
-</div>
 
 <!-- OVERLAY -->
 <div
@@ -198,7 +182,6 @@
 
     <label class="block text-gray-700 font-medium"> Form Background Image </label>
     <ImageUploader id={form.id} imageType="form" bind:image={form.meta.bgImage} />
-
     <div class="h-6"></div>
   </div>
 </div>
