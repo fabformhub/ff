@@ -2,7 +2,7 @@
   import { CopyLinkButton, Dropdown } from '$lib/ui';
   import { Clipboard } from '@lucide/svelte';
   import { tooltip } from '$lib/utils/tooltip.js';
-  import { DefaultLayout } from '$lib/layouts';
+  import { Menu } from '$lib/layouts';
   import { APP_URL } from '$lib/utils/global.js';
   import { page } from '$app/state';
   import { toast } from 'svelte-sonner';
@@ -45,7 +45,7 @@
   }
 </script>
 
-<DefaultLayout {formId} activeMenuLabel="Share">
+<Menu {formId} />
   <div class="min-h-screen bg-gray-50 px-6 py-12">
     <div class="mx-auto max-w-4xl rounded-2xl border border-gray-200 bg-white p-8 shadow-xl">
 
@@ -108,4 +108,3 @@
 
     </div>
   </div>
-</DefaultLayout>

@@ -3,7 +3,7 @@
   import { page } from '$app/state';
   import { getResponsesByFormId, deleteResponseById } from '$lib/services/responseService.js';
   import { blockRegistry } from '$lib/utils/blockRegistry.js';
-  import { DefaultLayout } from '$lib/layouts/';
+  import { Menu } from '$lib/layouts/';
   import {
     Inbox, Download, Trash2, Search, Star, MoreHorizontal, X,
     Rows3, LayoutGrid, ChevronDown, Sparkles, Link2, Zap,
@@ -213,7 +213,7 @@
   />
 </svelte:head>
 
-<DefaultLayout {formId} activeMenuLabel="Responses">
+<Menu formId= {formId} />
   <div class="min-h-screen relative font-sans" style="background:#F5FAFF">
     <style>
       @keyframes riseIn {
@@ -624,4 +624,3 @@
       </div>
     {/if}
   </div>
-</DefaultLayout>
