@@ -1,47 +1,27 @@
 <script>
-  import { supabase } from '$lib/supabaseClient';
-  let sending = $state(false);
-  let result = $state(null);
 
-  async function sendEmail(id) {
-    sending = true;
-    result = null;
-    id = "4a14f481-7273-4ffb-9f44-4587b7ff1efd";
+import { supabase } from "$lib/supabaseClient";
 
-    const { data, error } = await supabase.functions.invoke('send-email', {
-      body: {
-        uid: id,
-        subject: 'Testing 123',
-        html: '<p>Hello World!</p>',
-      },
-    });
+async function testEmailNotification() {
+	const { data, error } = await supabase.functions.invoke(
+		"send-submission-notification",
+		{
+			body: {
+				formId: "d9e4f7cf-91eb-4e22-aa2c-25d98c2dde4e"
+			}
+		}
+	);
 
-    if (error) {
-      console.log('error:', error);
-      let detailedMessage = error.message;
+	if (error) {
+		console.error("Email error:", error);
+		return;
+	}
 
-      if (error.context) {
-        try {
-          const bodyText = await error.context.text();
-          console.log('response body:', bodyText);
-          detailedMessage = bodyText;
-        } catch (e) {
-          console.log('could not read error context:', e);
-        }
-      }
+	console.log("Email sent:", data);
 
-      result = `Error: ${detailedMessage}`;
-    } else {
-      result = 'Email sent!';
-    }
-
-    sending = false;
-  }
+}
 </script>
 
-<button onclick={sendEmail} disabled={sending}>
-  {sending ? 'Sending…' : 'Send Email'}
+<button onclick={testEmailNotification}>
+	Send Test Email
 </button>
-{#if result}
-  <p>{result}</p>
-{/if}

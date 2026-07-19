@@ -9,6 +9,7 @@
  	import { validateBlock } from '$lib/utils/validation.js';
         import { page } from '$app/state';   
         const formId = $derived(page.params.id);
+        import { supabase } from '$lib/supabaseClient'
 
 	let showSplash = $state(true);
 	let errorMessage = $state('');
@@ -95,6 +96,8 @@
 			}));
 
 		await createResponse(formId, responses);
+                const { data, error } = await 
+                supabase.functions.invoke("send-submission-notification",{ body: { formId: form.id } });
 		submitted = true;
 	}
 

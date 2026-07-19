@@ -9,17 +9,7 @@
 	const formId = params.id;
 	const MESSAGE_LIMIT = 500;
 
-	// Fields available to insert into the subject or message.
-	// Swap for data.form?.fields?.map(f => f.key) once that's wired up.
-	const mergeFields = ["name", "email", "message"];
-
-	const sampleData = {
-		name: "Jamie Chen",
-		email: "jamie@example.com",
-		message: "Loved the product — quick question about pricing."
-	};
-
-	let enabled = $state(data.emailSettings?.enabled ?? false);
+        let enabled = $state(data.emailSettings?.enabled ?? false);
 	let subject = $state(data.emailSettings?.subject ?? "");
 	let message = $state(data.emailSettings?.message ?? "");
 	let saving = $state(false);
@@ -50,9 +40,6 @@
 		});
 	}
 
-	function renderPreview(text) {
-		return text.replace(/{{\s*(\w+)\s*}}/g, (_, key) => sampleData[key] ?? `{{${key}}}`);
-	}
 
 	async function save() {
 		saving = true;
@@ -169,49 +156,7 @@
 				</span>
 			</div>
 
-			<!-- Merge field chips -->
-			<div class="flex flex-wrap items-center gap-1.5 pt-1">
-				<span class="text-[11px] text-[#97A0BC] mr-0.5">Insert:</span>
-				{#each mergeFields as field}
-					<button
-						type="button"
-						onclick={() => insertToken(field)}
-						class="rounded-full border border-[#E3ECFA] bg-[#F5FAFF] px-2.5 py-1 text-[11px] font-medium text-[#5C6685] hover:border-[#6C63FF] hover:text-[#6C63FF] transition-colors duration-200"
-					>
-						{field}
-					</button>
-				{/each}
-			</div>
-
-			<!-- Preview toggle -->
-			<button
-				type="button"
-				onclick={() => (showPreview = !showPreview)}
-				class="inline-flex items-center gap-1.5 text-xs font-medium text-[#5C6685] hover:text-[#6C63FF] transition-colors duration-200"
-			>
-				{#if showPreview}
-					<EyeOff size={14} />
-					Hide preview
-				{:else}
-					<Eye size={14} />
-					Preview email
-				{/if}
-			</button>
-
-			{#if showPreview}
-				<div class="rounded-xl border border-[#E3ECFA] bg-[#F5FAFF] p-4">
-					<p class="text-[10px] font-semibold uppercase tracking-wider text-[#97A0BC] mb-1">Subject</p>
-					<p class="text-sm font-semibold text-[#1B2140] mb-3 break-words">
-						{renderPreview(subject) || "New submission received"}
-					</p>
-					<p class="text-[10px] font-semibold uppercase tracking-wider text-[#97A0BC] mb-1">Message</p>
-					<p class="text-sm text-[#5C6685] leading-relaxed whitespace-pre-wrap break-words">
-						{renderPreview(message) || "You'll receive a summary of the submitted answers here."}
-					</p>
-				</div>
-			{/if}
-		</div>
-
+			
 		<!-- Save -->
 		<button
 			onclick={save}
@@ -227,7 +172,6 @@
 				Save changes
 			{/if}
 		</button>
-
-		<p class="text-center text-xs text-[#97A0BC] mt-4">Changes apply to new submissions only.</p>
 	</div>
+</div>
 </div>
