@@ -68,6 +68,7 @@
 
 <div class="min-h-screen flex items-center justify-center bg-[#F5FAFF] p-4 sm:p-6 font-sans selection:bg-[#FFE4A8]">
 	<div class="absolute inset-0 overflow-hidden pointer-events-none opacity-40">
+<Menu formId={formId}/>
 		<div class="absolute -top-[35%] left-[15%] w-[600px] h-[600px] rounded-full bg-gradient-to-tr from-[#FF6B4A]/20 to-[#FFC94D]/20 blur-[120px]"></div>
 		<div class="absolute -bottom-[35%] right-[15%] w-[600px] h-[600px] rounded-full bg-gradient-to-br from-[#6C63FF]/15 to-[#22B573]/10 blur-[120px]"></div>
 	</div>
@@ -75,7 +76,6 @@
 	<div class="relative w-full max-w-[560px] bg-white border border-[#E3ECFA] shadow-[0_8px_30px_rgb(27,33,64,0.06)] rounded-2xl p-8 sm:p-10 transition-all duration-300">
 		<span class="absolute -top-[5px] left-10 w-[10px] h-[10px] rounded-full bg-[#FF6B4A] shadow-[0_2px_4px_rgba(0,0,0,0.15)]"></span>
 
-<Menu formId={formId}/>
 
 		<!-- Header -->
 		<div class="flex items-center gap-4 mb-8">
