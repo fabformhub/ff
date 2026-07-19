@@ -10,7 +10,7 @@
   let { formId, setActive } = $props();
 
   const navigationItems = [
-    { icon: Hammer, label: "Build", url: `/form/build/${formId}` },
+    { icon: Hammer, label: "Build", url: `/build/${formId}` },
     { icon: Link, label: "Integrate", url: `/integrate/${formId}` },
     { icon: Share2, label: "Share", url: `/share/${formId}` },
     { icon: BarChart2, label: "Responses", url: `/responses/${formId}` }
