@@ -90,26 +90,38 @@ export const authService = (() => {
   // SIGNUP
   // --------------------------------------------------
   const createUser = async (email, password) => {
-    state.loading = true;
-    state.error = null;
+  state.loading = true;
+  state.error = null;
 
-    try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password
+  try {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password
+    });
+
+    if (error) throw error;
+
+    const userId = data.user?.id;
+
+    // --------------------------------------------------
+    // SEND WELCOME EMAIL (EDGE FUNCTION)
+    // --------------------------------------------------
+    if (userId) {
+      await supabase.functions.invoke("welcome-email", {
+        body: { userId }
       });
-
-      if (error) throw error;
-
-      setUser(data.session?.user || null);
-      return true;
-    } catch (err) {
-      setError(err);
-      return false;
-    } finally {
-      state.loading = false;
     }
-  };
+
+    setUser(data.session?.user || null);
+    return true;
+  } catch (err) {
+    setError(err);
+    return false;
+  } finally {
+    state.loading = false;
+  }
+};
+
 
   // --------------------------------------------------
   // LOGOUT
