@@ -19,7 +19,7 @@ export const authService = (() => {
   };
 
   // --------------------------------------------------
-  // INIT (CALL ON APP START)
+  // INIT
   // --------------------------------------------------
   const init = async () => {
     if (state.initialized) return;
@@ -30,10 +30,37 @@ export const authService = (() => {
       const { data, error } = await supabase.auth.getSession();
       if (error) throw error;
 
-      setUser(data.session?.user || null);
+      const user = data.session?.user || null;
+      setUser(user);
 
-      supabase.auth.onAuthStateChange((_event, session) => {
-        setUser(session?.user || null);
+      // Fire welcome email on FIRST session load (OAuth fix)
+      if (user && !user.user_metadata?.welcome_email_sent) {
+        await supabase.functions.invoke('welcome-email', {
+          body: { userId: user.id }
+        });
+
+        await supabase.auth.updateUser({
+          data: { welcome_email_sent: true }
+        });
+      }
+
+      supabase.auth.onAuthStateChange(async (event, session) => {
+        const user = session?.user || null;
+        setUser(user);
+
+        if (!user) return;
+
+        const alreadySent = user.user_metadata?.welcome_email_sent === true;
+
+        if (event === 'SIGNED_IN' && !alreadySent) {
+          await supabase.functions.invoke('welcome-email', {
+            body: { userId: user.id }
+          });
+
+          await supabase.auth.updateUser({
+            data: { welcome_email_sent: true }
+          });
+        }
       });
 
       state.initialized = true;
@@ -45,7 +72,7 @@ export const authService = (() => {
   };
 
   // --------------------------------------------------
-  // GOOGLE LOGIN (PKCE)
+  // GOOGLE LOGIN
   // --------------------------------------------------
   const loginWithGoogle = async () => {
     state.loading = true;
@@ -90,53 +117,38 @@ export const authService = (() => {
   // SIGNUP
   // --------------------------------------------------
   const createUser = async (email, password) => {
-  state.loading = true;
-  state.error = null;
+    state.loading = true;
+    state.error = null;
 
-  try {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password
-    });
-
-    if (error) throw error;
-
-    const userId = data.user?.id;
-
-    // --------------------------------------------------
-    // SEND WELCOME EMAIL (EDGE FUNCTION)
-    // --------------------------------------------------
-    if (userId) {
-      await supabase.functions.invoke("welcome-email", {
-        body: { userId }
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password
       });
+
+      if (error) throw error;
+
+      setUser(data.session?.user || null);
+      return true;
+    } catch (err) {
+      setError(err);
+      return false;
+    } finally {
+      state.loading = false;
     }
-
-    setUser(data.session?.user || null);
-    return true;
-  } catch (err) {
-    setError(err);
-    return false;
-  } finally {
-    state.loading = false;
-  }
-};
-
+  };
 
   // --------------------------------------------------
-  // LOGOUT
+  // LOGOUT (SUPABASE ONLY)
   // --------------------------------------------------
   const logout = async () => {
     await supabase.auth.signOut();
     setUser(null);
+    localStorage.clear();
+    sessionStorage.clear();
   };
 
-const getUser = () => {
-  return state.user;
-};
-  // --------------------------------------------------
-  // GOOGLE CALLBACK HANDLED AUTOMATICALLY (NO NEED)
-  // --------------------------------------------------
+  const getUser = () => state.user;
 
   return {
     state,
@@ -149,3 +161,4 @@ const getUser = () => {
     supabase
   };
 })();
+
