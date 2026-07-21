@@ -148,7 +148,10 @@ export const authService = (() => {
     sessionStorage.clear();
   };
 
-  const getUser = () => state.user;
+const getUser = async () => {
+	if (!state.initialized) await init();
+	return state.user;
+};
 
   return {
     state,
