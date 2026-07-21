@@ -1,60 +1,100 @@
 <script>
-  let { canAnswer = false, value = $bindable(), props } = $props();
+  let {
+    canAnswer = false,
+    value = $bindable(),
 
-  let min = $derived(Number(props.start ?? 0));
-  let max = $derived(Number(props.end ?? 10));
+    start = 0,
+    end = 10,
+    leftLabel = "",
+    rightLabel = ""
+  } = $props();
+
+  const min = $derived(Number(start));
+  const max = $derived(Number(end));
 
   let selected = $state(value);
-  let animating = $state(false);
-
-  function selectValue(i) {
-  
-    if (!canAnswer) return;
-    selected = i;
-    value = i;
-
-    animating = false;
-    requestAnimationFrame(() => animating = true);
-  }
 
   $effect(() => {
-    if (value !== selected) selected = value;
+    if (value !== selected) {
+      selected = value;
+    }
   });
+
+  const numbers = $derived.by(() => {
+    if (!Number.isFinite(min) || !Number.isFinite(max) || max < min) {
+      return [];
+    }
+
+    return Array.from({ length: max - min + 1 }, (_, i) => min + i);
+  });
+
+  function selectValue(num) {
+    if (!canAnswer) return;
+
+    selected = num;
+    value = num;
+  }
 </script>
 
-<style>
-  .pop {
-    animation: pop 0.3s ease;
-  }
+<div class="w-full max-w-5xl mx-auto">
 
-  @keyframes pop {
-    0% { transform: scale(1); }
-    40% { transform: scale(1.25); }
-    100% { transform: scale(1); }
-  }
-</style>
-
-<div class="w-full max-w-3xl mx-auto space-y-6">
-  <div class="flex justify-center gap-3 px-2 ">
-    {#each Array(max - min + 1).entries() as [i]}
-      {@const num = min + i}
+  <div
+    class="flex justify-center gap-3 sm:gap-4 flex-wrap"
+  >
+    {#each numbers as num}
       <button
+        type="button"
         onclick={() => selectValue(num)}
-        class={`w-10 h-10 sm:w-12 sm:h-12 rounded font-semibold text-sm transition duration-300 transform
-          flex items-center justify-center
-          ${canAnswer ? 'cursor-pointer' : 'pointer-events-none'}
-          ${selected === num
-            ? `bg-indigo-600 text-white shadow-lg ${animating ? 'pop' : ''}`
-            : 'bg-white text-gray-800 border border-gray-300 hover:bg-indigo-100 hover:text-indigo-700'}
+        disabled={!canAnswer}
+        aria-pressed={selected === num}
+        class={`
+          group relative
+          h-14 w-14
+          sm:h-16 sm:w-16
+          rounded-full
+          text-base
+          font-semibold
+          transition-all
+          duration-300
+          ease-out
+          select-none
+          border
+
+          ${
+            selected === num
+              ? "bg-indigo-600 border-indigo-600 text-white shadow-xl shadow-indigo-500/30 scale-110"
+              : "bg-white border-slate-200 text-slate-700 hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700 hover:-translate-y-1 hover:shadow-lg"
+          }
+
+          ${
+            canAnswer
+              ? "cursor-pointer"
+              : "opacity-50 cursor-not-allowed"
+          }
         `}
       >
-        {num}
+        <span
+          class={`transition-transform duration-300 ${
+            selected === num ? "scale-110" : "group-hover:scale-110"
+          }`}
+        >
+          {num}
+        </span>
+
+        {#if selected === num}
+          <span
+            class="absolute inset-0 rounded-full ring-4 ring-indigo-400/20 animate-pulse pointer-events-none"
+          />
+        {/if}
       </button>
     {/each}
   </div>
 
-  <div class="flex justify-between text-sm text-gray-500 font-medium px-2">
-    <span>{props.leftLabel}</span>
-    <span>{props.rightLabel}</span>
+  <div
+    class="mt-6 flex justify-between text-sm font-medium text-slate-500"
+  >
+    <span>{leftLabel}</span>
+    <span>{rightLabel}</span>
   </div>
+
 </div>
