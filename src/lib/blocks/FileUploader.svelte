@@ -1,178 +1,310 @@
 <script>
 	import { supabase } from "$lib/supabaseClient";
-	import { authService } from "$lib/services/authService.svelte.js";
 	import { BlockWrapper } from "$lib/blocks";
 	import CloudUpload from "@lucide/svelte/icons/cloud-upload";
 	import Trash2 from "@lucide/svelte/icons/trash-2";
 	import FileText from "@lucide/svelte/icons/file-text";
+	import FileSpreadsheet from "@lucide/svelte/icons/file-spreadsheet";
 
-	let { canAnswer = false } = $props();
+	let { canAnswer = false, formId, plan = "free" } = $props();
+
+	const PLANS = {
+		free: {
+			maxFiles: 5,
+			maxSize: 10 * 1024 * 1024
+		},
+		pro: {
+			maxFiles: 20,
+			maxSize: 50 * 1024 * 1024
+		}
+	};
+
+	const limits = PLANS[plan];
+
 	let fileInput;
 	let uploadedFiles = $state([]);
-	let currentUserId = "";
-	let progress = $state(0);
 	let uploading = $state(false);
 	let dragging = $state(false);
+	let uploadError = $state("");
+	let sessionId = $state("");
 
-	authService.getUser().then(async (user) => {
-		if (user) {
-			currentUserId = user.id;
-			await listUserFiles();
+	$effect(() => {
+		if (!formId) return;
+
+		let id = localStorage.getItem(`fabform-upload-${formId}`);
+
+		if (!id) {
+			id = crypto.randomUUID();
+			localStorage.setItem(`fabform-upload-${formId}`, id);
 		}
+
+		sessionId = id;
+		listFiles();
 	});
 
-	async function listUserFiles() {
-		if (!currentUserId) return;
-		const { data, error } = await supabase.storage
-			.from("user-files")
-			.list(`users/${currentUserId}/`, { limit: 100 });
-		if (!error) {
-			uploadedFiles = await Promise.all(
-				data.map(async (file) => {
-					const { data: urlData } = supabase.storage
-						.from("user-files")
-						.getPublicUrl(`users/${currentUserId}/${file.name}`);
-					return {
-						...file,
-						publicUrl: urlData.publicUrl,
-						sizeKB: file.metadata?.size ? (file.metadata.size / 1024).toFixed(1) : "0.0"
-					};
-				})
-			);
-		} else {
-			alert("Could not list files: " + error.message);
-		}
+	function folderPath() {
+		return `forms/${formId}/sessions/${sessionId}`;
+	}
+
+	function isImage(name) {
+		return /\.(jpg|jpeg|png|webp|gif)$/i.test(name);
+	}
+
+	function isSpreadsheet(name) {
+		return /\.(xls|xlsx|csv)$/i.test(name);
 	}
 
 	function triggerFileInput() {
-		if (canAnswer) fileInput.click();
+		if (!canAnswer) return;
+		uploadError = "";
+		fileInput.click();
 	}
 
-	async function handleFileChange(event) {
-		const file = event.target.files[0];
-		if (file) await handleFileUpload(file);
-	}
+	async function listFiles() {
+		if (!formId || !sessionId) return;
 
-	async function handleFileUpload(file) {
-		if (!canAnswer || !currentUserId) return;
-		progress = 0;
-		uploading = true;
-
-		const fileSize = file.size;
-		const increment = 2 + 1000000 / fileSize;
-		const interval = 100;
-		const timer = setInterval(() => {
-			if (progress < 90) progress = Math.min(progress + increment, 90);
-		}, interval);
-
-		const path = `users/${currentUserId}/${file.name}`;
-		const { error } = await supabase.storage.from("user-files").upload(path, file, { upsert: true });
-		clearInterval(timer);
+		const { data, error } = await supabase.storage
+			.from("form-uploads")
+			.list(folderPath(), {
+				limit: 100,
+				sortBy: {
+					column: "created_at",
+					order: "desc"
+				}
+			});
 
 		if (error) {
-			uploading = false;
-			progress = 0;
-			alert(`Upload failed: ${error.message}`);
+			uploadError = error.message;
 			return;
 		}
 
-		progress = 100;
-		await listUserFiles();
-		setTimeout(() => {
-			uploading = false;
-			progress = 0;
-		}, 700);
+		uploadedFiles = data.map(file => {
+			const path = `${folderPath()}/${file.name}`;
+
+			const { data:urlData } = supabase.storage
+				.from("form-uploads")
+				.getPublicUrl(path);
+
+			return {
+				name: file.name,
+				path,
+				publicUrl: urlData.publicUrl,
+				sizeKB: file.metadata?.size
+					? (file.metadata.size / 1024).toFixed(1)
+					: "0",
+				status: "complete"
+			};
+		});
 	}
 
-	async function deleteFile(fileName) {
-		const path = `users/${currentUserId}/${fileName}`;
-		const { error } = await supabase.storage.from("user-files").remove([path]);
-		if (error) {
-			alert(`Delete failed: ${error.message}`);
-		} else {
-			await listUserFiles();
+	async function handleFileChange(event) {
+		for (const file of Array.from(event.target.files)) {
+			uploadFile(file);
 		}
+
+		event.target.value = "";
+	}
+
+	async function uploadFile(file) {
+		uploadError = "";
+
+		if (uploadedFiles.length >= limits.maxFiles) {
+			uploadError = `Maximum ${limits.maxFiles} files allowed`;
+			return;
+		}
+
+		if (file.size > limits.maxSize) {
+			uploadError = `Maximum file size is ${limits.maxSize / 1024 / 1024}MB`;
+			return;
+		}
+
+		const tempId = crypto.randomUUID();
+
+		const preview = {
+			id: tempId,
+			name: file.name,
+			sizeKB: (file.size / 1024).toFixed(1),
+			status: "uploading",
+			progress: 0,
+			publicUrl: file.type.startsWith("image/")
+				? URL.createObjectURL(file)
+				: null
+		};
+
+		uploadedFiles = [preview, ...uploadedFiles];
+
+		const extension = file.name.includes(".")
+			? file.name.split(".").pop()
+			: "file";
+
+		const filename = `${crypto.randomUUID()}.${extension}`;
+		const path = `${folderPath()}/${filename}`;
+
+		const { error } = await supabase.storage
+			.from("form-uploads")
+			.upload(path, file);
+
+		if (error) {
+			uploadedFiles = uploadedFiles.map(item =>
+				item.id === tempId
+					? { ...item, status: "error" }
+					: item
+			);
+
+			uploadError = error.message;
+			return;
+		}
+
+		const { data:urlData } = supabase.storage
+			.from("form-uploads")
+			.getPublicUrl(path);
+
+		uploadedFiles = uploadedFiles.map(item =>
+			item.id === tempId
+				? {
+					id: tempId,
+					name: file.name,
+					path,
+					publicUrl: urlData.publicUrl,
+					sizeKB: (file.size / 1024).toFixed(1),
+					status: "complete"
+				}
+				: item
+		);
+	}
+
+	async function deleteFile(file) {
+		if (!file.path) return;
+
+		const { error } = await supabase.storage
+			.from("form-uploads")
+			.remove([file.path]);
+
+		if (error) {
+			uploadError = error.message;
+			return;
+		}
+
+		uploadedFiles = uploadedFiles.filter(
+			item => item.path !== file.path
+		);
 	}
 
 	function handleDrop(event) {
 		event.preventDefault();
 		dragging = false;
-		if (canAnswer) handleFileUpload(event.dataTransfer.files[0]);
+
+		if (!canAnswer) return;
+
+		for (const file of event.dataTransfer.files) {
+			uploadFile(file);
+		}
 	}
 </script>
 
 <BlockWrapper {canAnswer}>
-	<div class="w-full space-y-8">
+	<div class="w-full space-y-6">
 		<div
 			role="button"
-			tabindex={canAnswer ? 0 : -1}
-			ondrop={handleDrop}
-			ondragover={(e) => { e.preventDefault(); if (canAnswer) dragging = true; }}
-			ondragleave={() => (dragging = false)}
+			tabindex="0"
 			onclick={triggerFileInput}
+			ondrop={handleDrop}
+			ondragover={(e) => {
+				e.preventDefault();
+				dragging = true;
+			}}
+			ondragleave={() => dragging = false}
 			class={[
-				"rounded-2xl border-[1.5px] border-dashed p-10 flex flex-col items-center text-center bg-gray-50",
-				"transition-colors duration-200",
-				canAnswer ? "cursor-pointer" : "cursor-not-allowed opacity-40",
-				dragging ? "border-pink-500 bg-pink-50" : "border-gray-300"
+				"rounded-3xl border-2 border-dashed p-10 text-center transition-all duration-300",
+				dragging
+					? "border-pink-500 bg-pink-50 scale-[1.02]"
+					: "border-gray-200 bg-white",
+				canAnswer
+					? "cursor-pointer hover:border-pink-400 hover:shadow-lg"
+					: "opacity-50"
 			]}
 		>
-			<div class="w-[52px] h-[52px] rounded-full bg-pink-50 flex items-center justify-center mb-3.5">
-				<CloudUpload size={24} strokeWidth={2} class="text-pink-500" />
+			<div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-pink-50">
+				<CloudUpload size={28} class="text-pink-500" />
 			</div>
 
-			{#if canAnswer}
-				<p class="text-[0.95rem] font-medium text-gray-900 mb-0.5">Click or drag a file to upload</p>
-				<p class="text-[0.8rem] text-gray-400">PNG, JPG or PDF</p>
-			{/if}
+			<h3 class="font-semibold text-gray-900">
+				Upload files
+			</h3>
+
+			<p class="mt-2 text-sm text-gray-500">
+				Drag files here or click to browse
+			</p>
+
+			<p class="mt-2 text-xs text-gray-400">
+				{limits.maxFiles} files maximum · {limits.maxSize / 1024 / 1024}MB each
+			</p>
 
 			<input
-				type="file"
-				class="hidden"
 				bind:this={fileInput}
+				type="file"
+				multiple
+				class="hidden"
 				onchange={handleFileChange}
-				disabled={!canAnswer}
 			/>
 		</div>
 
-		{#if uploading}
-			<div class="flex items-center gap-2.5 -mt-4">
-				<div class="flex-1 h-1.5 rounded-full bg-gray-100 overflow-hidden">
-					<div
-						class="h-full rounded-full bg-pink-500 transition-all duration-300 ease-out"
-						style="width: {progress}%;"
-					></div>
-				</div>
-				<span class="text-[0.8rem] text-gray-400 min-w-[32px]">{Math.floor(progress)}%</span>
+		{#if uploadError}
+			<div class="rounded-xl bg-red-50 p-3 text-sm text-red-700">
+				{uploadError}
 			</div>
 		{/if}
 
-		{#if canAnswer && uploadedFiles.length > 0}
-			<div class="flex flex-wrap gap-3.5 justify-center">
+		{#if uploadedFiles.length}
+			<div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
 				{#each uploadedFiles as file}
-					<div class="relative w-32 p-2.5 rounded-2xl border border-gray-200 bg-white flex flex-col items-center gap-1" title={file.name}>
-						{#if file.name.match(/\.(jpg|jpeg|png|gif)$/i)}
-							<img src={file.publicUrl} alt="preview" class="w-full h-[88px] rounded-[10px] object-cover" />
-						{:else}
-							<div class="w-full h-[88px] rounded-[10px] bg-gray-50 flex items-center justify-center">
-								<FileText size={28} strokeWidth={1.6} class="text-gray-400" />
-							</div>
-						{/if}
+					<div class="group overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
+						<div class="relative aspect-square bg-gray-50">
+							{#if isImage(file.name)}
+								<img
+									src={file.publicUrl}
+									alt={file.name}
+									class="h-full w-full object-cover"
+								/>
+							{:else}
+								<div class="flex h-full items-center justify-center">
+									{#if isSpreadsheet(file.name)}
+										<FileSpreadsheet size={42} class="text-green-500" />
+									{:else}
+										<FileText size={42} class="text-gray-400" />
+									{/if}
+								</div>
+							{/if}
 
-						<span class="text-[0.8rem] font-medium text-gray-900 truncate w-full text-center mt-1">
-							{file.name}
-						</span>
-						<span class="text-[0.7rem] text-gray-400">{file.sizeKB} KB</span>
+							{#if file.status === "uploading"}
+								<div class="absolute inset-0 flex items-center justify-center bg-white/70">
+									<div class="text-sm text-gray-600">
+										Uploading...
+									</div>
+								</div>
+							{/if}
 
-						<button
-							type="button"
-							onclick={() => deleteFile(file.name)}
-							aria-label={`Delete file ${file.name}`}
-							title="Delete file"
-							class="absolute top-2 right-2 w-[22px] h-[22px] rounded-full bg-gray-50 text-gray-400 flex items-center justify-center transition-colors duration-150 hover:bg-pink-50 hover:text-pink-800"
-						>
-							<Trash2 size={13} strokeWidth={2} />
-						</button>
+							{#if file.status === "complete"}
+								<button
+									type="button"
+									onclick={() => deleteFile(file)}
+									class="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-white/95 text-gray-500 shadow-md opacity-0 scale-90 transition-all group-hover:opacity-100 group-hover:scale-100 hover:bg-red-50 hover:text-red-600"
+									title="Delete file"
+								>
+									<Trash2 size={15} />
+								</button>
+							{/if}
+						</div>
+
+						<div class="p-3">
+							<p class="truncate text-sm font-medium text-gray-900">
+								{file.name}
+							</p>
+
+							<p class="mt-1 text-xs text-gray-400">
+								{file.sizeKB} KB
+							</p>
+						</div>
 					</div>
 				{/each}
 			</div>
