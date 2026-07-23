@@ -2,7 +2,6 @@
   import { CopyLinkButton, Dropdown } from '$lib/ui';
   import { Clipboard, Link2, Code2, Check } from '@lucide/svelte';
   import { tooltip } from '$lib/utils/tooltip.js';
-  import { Menu } from '$lib/layouts';
   import { APP_URL } from '$lib/utils/global.js';
   import { page } from '$app/state';
   import { toast } from 'svelte-sonner';
@@ -50,8 +49,6 @@
     rel="stylesheet"
   />
 </svelte:head>
-
-<Menu {formId} />
 
 <div class="relative min-h-screen bg-[#F5FAFF] px-4 py-12 sm:px-6 font-sans overflow-hidden">
   <!-- Decorative blurred blobs, echoing the auth screen -->

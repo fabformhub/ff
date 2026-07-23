@@ -22,7 +22,7 @@
   <!-- Top section -->
   <button
     type="button"
-    onclick={() => goto('/build/' + form.id)}
+    onclick={() => goto(`/form/${form.id}/build` )}
     class="card-top"
   >
     <h2 class="card-title">{form.name}</h2>
@@ -37,7 +37,7 @@
   <div class="card-bottom">
     <button
       type="button"
-      onclick={() => goto('/responses/' + form.id)}
+      onclick={() => goto(`/form/${form.id}/responses`)}
       class="responses-link"
     >
       {responseCount} response{responseCount === 1 ? '' : 's'}

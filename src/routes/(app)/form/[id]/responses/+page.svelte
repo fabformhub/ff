@@ -213,7 +213,6 @@
   />
 </svelte:head>
 
-<Menu formId= {formId} />
   <div class="min-h-screen relative font-sans" style="background:#F5FAFF">
     <style>
       @keyframes riseIn {

@@ -2,7 +2,6 @@
   import { onMount } from 'svelte';
   import { authService } from '$lib/services/authService.svelte.js';
   import { checkUserSubscribed } from '$lib/services/subscriptionService.js';
-  import { Menu } from '$lib/layouts'
   let userPaid = $state(false);
   let userEmail = $state(null);
   let loadingAccess = $state(true);
@@ -57,7 +56,6 @@
     rel="stylesheet"
   />
 </svelte:head>
-<Menu formId={formId} />
 <div class="relative min-h-screen bg-[#F5FAFF] p-6 sm:p-10 font-sans overflow-hidden">
   <div class="absolute inset-0 overflow-hidden pointer-events-none opacity-40">
     <div class="absolute -top-[25%] left-[10%] w-[600px] h-[600px] rounded-full bg-gradient-to-tr from-[#FF6B4A]/15 to-[#FFC94D]/15 blur-[120px]"></div>

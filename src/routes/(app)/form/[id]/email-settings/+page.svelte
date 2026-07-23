@@ -3,7 +3,6 @@
 	import { toast } from "svelte-sonner";
 	import { saveEmailSettings } from "$lib/services/emailSettingsService";
 	import { Mail, Eye, EyeOff, Loader2, Pause } from "@lucide/svelte";
-        import { Menu } from "$lib/layouts"
 
 	let { params, data } = $props();
 
@@ -68,8 +67,7 @@
 
 <div class="min-h-screen flex items-center justify-center bg-[#F5FAFF] p-4 sm:p-6 font-sans selection:bg-[#FFE4A8]">
 	<div class="absolute inset-0 overflow-hidden pointer-events-none opacity-40">
-<Menu formId={formId}/>
-		<div class="absolute -top-[35%] left-[15%] w-[600px] h-[600px] rounded-full bg-gradient-to-tr from-[#FF6B4A]/20 to-[#FFC94D]/20 blur-[120px]"></div>
+	<div class="absolute -top-[35%] left-[15%] w-[600px] h-[600px] rounded-full bg-gradient-to-tr from-[#FF6B4A]/20 to-[#FFC94D]/20 blur-[120px]"></div>
 		<div class="absolute -bottom-[35%] right-[15%] w-[600px] h-[600px] rounded-full bg-gradient-to-br from-[#6C63FF]/15 to-[#22B573]/10 blur-[120px]"></div>
 	</div>
 
