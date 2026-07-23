@@ -1,7 +1,6 @@
 <script>
   import { getComponent } from '$lib/utils/getComponent.js';
   import AlertTriangle from '@lucide/svelte/icons/alert-triangle';
-  import Eye from '@lucide/svelte/icons/eye';
 
   let {
     block,
@@ -19,16 +18,6 @@
 <!-- OUTER: FULL SCREEN + PROPER CENTERING SYSTEM -->
 <div class="relative w-full px-6 py-10 flex">
 
-  <!-- WORLD-CLASS PREVIEW MODE BADGE -->
-  {#if !canAnswer}
-    <div class="absolute top-2 right-2 flex items-center gap-1
-                bg-white/60 backdrop-blur-md px-2 py-0.5 rounded-full
-                text-gray-700 text-[10px] font-semibold tracking-wide
-                pointer-events-none select-none shadow-sm border border-white/40">
-      <Eye class="w-3 h-3 opacity-80" />
-      <span>Preview Mode</span>
-    </div>
-  {/if}
 
   <!-- HORIZONTAL ALIGNMENT LAYER -->
   <div class={`w-full flex ${isLeft ? 'justify-start' : 'justify-center'}`}>
