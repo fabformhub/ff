@@ -195,16 +195,37 @@ async function copyFormLink(id) {
     }
   }
 
-  async function deleteForm(form) {
-    try {
-      const ok = await openDialog('Delete form', 'This action cannot be undone.', 'Cancel', 'Delete');
-      if (!ok) return;
-      await deleteFormById(form.id);
-      await fetchForms();
-    } catch (err) {
-      showActionError(err, "deleteForm: Unexpected error");
+async function deleteForm(form) {
+  try {
+    const ok = await openDialog('Delete form', 'This action cannot be undone.', 'Cancel', 'Delete');
+    if (!ok) return;
+
+    // keep backup in case database delete fails
+    const deletedForm = form;
+    const index = forms.findIndex((f) => f.id === form.id);
+
+    // remove from UI immediately
+    forms = forms.filter((f) => f.id !== form.id);
+
+    // delete from database
+    const res = await deleteFormById(form.id);
+
+    if (!res?.success) {
+      // restore if failed
+      forms = [
+        ...forms.slice(0, index),
+        deletedForm,
+        ...forms.slice(index)
+      ];
+
+      throw new Error(res?.error?.message || "Failed to delete form");
     }
+
+    toast.success("Form deleted");
+  } catch (err) {
+    showActionError(err, "deleteForm: Unexpected error");
   }
+}
 
   async function duplicateForm(form) {
     try {

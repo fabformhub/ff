@@ -55,7 +55,7 @@
         { label: 'Open Form', icon: 'OpenForm', onClick: onOpen },
         { label: 'Copy Form Link', icon: 'CopyLink', onClick: onCopy },
         { label: 'Rename Form', icon: 'Rename', onClick: onRenameForm },
-        { label: 'Customize Form Link', icon: 'RenameLink', onClick: onRenameFormSlug },
+        { label: 'Edit Form Link', icon: 'RenameLink', onClick: onRenameFormSlug },
         { label: 'Duplicate', icon: 'Duplicate', onClick: onDuplicate },
         { label: 'Delete Form', icon: 'Delete', onClick: onDelete },
         { label: 'Create QR Code', icon: 'QRCode', onClick: onQRCode }
