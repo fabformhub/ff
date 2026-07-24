@@ -173,42 +173,42 @@ async function copyFormLink(id) {
     }
   }
 
-  async function renameForm(formId) {
+  async function renameForm(form) {
     try {
-      const result = await openDialog('Rename form', '', 'Cancel', 'Rename', RenameDialog, { name: 'Untitled' });
+      const result = await openDialog('Rename form', '', 'Cancel', 'Rename', RenameDialog, { name: form.name });
       if (!result?.name) return;
-      await updateForm({ id: formId, name: result.name });
+      await updateForm({ id: form.id, name: result.name });
       await fetchForms();
     } catch (err) {
       showActionError(err, "renameForm: Unexpected error");
     }
   }
 
-  async function renameFormSlug(formId) {
+  async function renameFormSlug(form) {
     try {
-      const result = await openDialog('Rename link', '', 'Cancel', 'Rename', RenameSlugDialog, { slugName: generateRandomUrl() });
+      const result = await openDialog('Rename link', '', 'Cancel', 'Rename', RenameSlugDialog, { slugName: form.slug ?? generateRandomUrl() });
       if (!result?.slugName) return;
-      await updateFormSlug(formId, result.slugName);
+      await updateFormSlug(form.id, result.slugName);
       await fetchForms();
     } catch (err) {
       showActionError(err, "renameFormSlug: Unexpected error");
     }
   }
 
-  async function deleteForm(formId) {
+  async function deleteForm(form) {
     try {
       const ok = await openDialog('Delete form', 'This action cannot be undone.', 'Cancel', 'Delete');
       if (!ok) return;
-      await deleteFormById(formId);
+      await deleteFormById(form.id);
       await fetchForms();
     } catch (err) {
       showActionError(err, "deleteForm: Unexpected error");
     }
   }
 
-  async function duplicateForm(formId) {
+  async function duplicateForm(form) {
     try {
-      await duplicateFormById(formId);
+      await duplicateFormById(form.id);
       await fetchForms();
     } catch (err) {
       showActionError(err, "duplicateForm: Unexpected error");
@@ -363,10 +363,10 @@ async function copyFormLink(id) {
             formViewCount={formViewCounts[form.id]}
             onOpen={() => openFormLink(form.slug)}
             onCopy={() => copyFormLink(form.slug)}
-            onRenameForm={() => renameForm(form.id)}
-            onRenameFormSlug={() => renameFormSlug(form.id)}
-            onDuplicate={() => duplicateForm(form.id)}
-            onDelete={() => deleteForm(form.id)}
+            onRenameForm={() => renameForm(form)}
+            onRenameFormSlug={() => renameFormSlug(form)}
+            onDuplicate={() => duplicateForm(form)}
+            onDelete={() => deleteForm(form)}
             onQRCode={() =>
               openDialog('QR Code', '', 'Close', null, QRCodeDialog, {
                 text: APP_URL + `/f/${form.slug || form.id}`
