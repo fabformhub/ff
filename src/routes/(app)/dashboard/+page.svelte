@@ -351,8 +351,8 @@
             {form}
             responseCount={formResponseCounts[form.id]}
             formViewCount={formViewCounts[form.id]}
-            onOpen={() => openFormLink(form.id)}
-            onCopy={() => copyFormLink(form.id)}
+            onOpen={() => openFormLink(form.slug)}
+            onCopy={() => copyFormLink(form.slug)}
             onRenameForm={() => renameForm(form.id)}
             onRenameFormSlug={() => renameFormSlug(form.id)}
             onDuplicate={() => duplicateForm(form.id)}
