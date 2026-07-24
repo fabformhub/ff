@@ -13,6 +13,7 @@
   import { uniqueNamesGenerator, adjectives, animals } from 'unique-names-generator';
   import { Plus, FileText } from '@lucide/svelte';
   import { formMeta } from '$lib/constants/formMeta.js';
+  import { toast } from "svelte-sonner";
 
   // ----- Reactive state (Svelte 5 runes) -----
   let forms = $state([]);
@@ -74,11 +75,20 @@
     window.open("https://fabform.io/pricing", "_blank");
   }
 
-  function copyFormLink(id) {
-    navigator.clipboard.writeText(APP_URL + `/f/${id}`);
-  }
+async function copyFormLink(id) {
+  const link = APP_URL + `/f/${id}`;
 
-  function openFormLink(id) {
+  try {
+    await navigator.clipboard.writeText(link);
+    toast.success("Form link copied", {
+      description: link
+    });
+  } catch (error) {
+    toast.error("Failed to copy form link");
+  }
+}
+ 
+ function openFormLink(id) {
     window.open(`${APP_URL}/f/${id}`, "_blank");
   }
 
