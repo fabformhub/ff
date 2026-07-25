@@ -18,8 +18,8 @@
 	let form = $derived(data.form);
 	let formId = $derived(page.params.id);
 
-	// 3. Mutable reactive state for blocks so bind:block works
-	let blocks = $state(data.blocks ? [...data.blocks] : []);
+	// 3. Mutable reactive state for blocks using $derived for immediate sync
+	let blocks = $derived(data.blocks ? [...data.blocks] : []);
 	let blockNo = $state(0);
 	let showSplash = $state(true);
 	let errorMessage = $state('');
@@ -27,13 +27,6 @@
 
 	let direction = $state('bottom');
 	let flyParams = $state({});
-
-	// Keep blocks updated if data prop re-hydrates or changes
-	$effect(() => {
-		if (data.blocks && data.blocks.length > 0) {
-			blocks = [...data.blocks];
-		}
-	});
 
 	// -----------------------------
 	// ANIMATION CONFIG
@@ -78,7 +71,7 @@
 			.filter((b) => b.value != null)
 			.map((b) => ({
 				blockId: b.id,
-				blockTypeId: b.meta?.blockTypeId,
+				type: b.meta?.type, // Updated from blockTypeId -> type
 				question: b.meta?.question || b.meta?.title,
 				answer: b.value
 			}));
@@ -105,7 +98,8 @@
 		const block = blocks[blockNo];
 		if (!block) return;
 
-		if (block.meta?.component !== 'ThankYou' && block.type !== 'thankyou') {
+		// Check against string type 'thank-you'
+		if (block.meta?.component !== 'ThankYou' && block.meta?.type !== 'thank-you') {
 			const err = validateBlock(block);
 			if (err) {
 				errorMessage = err;
@@ -159,7 +153,7 @@
 			<div in:fly={flyParams} class="w-full h-full flex items-center justify-center">
 				{#if blocks[blockNo]}
 					<FormView
-						form ={data.form}
+						form={data.form}
 						bind:block={blocks[blockNo]}
 						canAnswer={true}
 						{errorMessage}

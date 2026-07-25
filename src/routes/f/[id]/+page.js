@@ -1,21 +1,24 @@
 // src/routes/(wherever)/[id]/+page.js
 
-import {
-	getForm,
-	getBlocksByFormId
-} from "$lib/services/formService.js";
+import { getForm, getBlocksByFormId } from "$lib/services/formService.js";
 
 export async function load({ params }) {
-	console.log('[load] params.id:', params.id);
-
 	const formRes = await getForm(params.id);
-	console.log('[load] formRes:', JSON.stringify(formRes, null, 2));
 
-	const blocksRes = await getBlocksByFormId(params.id);
-	console.log('[load] blocksRes:', JSON.stringify(blocksRes, null, 2));
+	if (!formRes?.success || !formRes?.data?.form) {
+		return {
+			form: null,
+			blocks: []
+		};
+	}
+
+	const form = formRes.data.form;
+
+	// Pass form.id (UUID) rather than params.id (slug) to prevent Postgres UUID 400 errors
+	const blocksRes = await getBlocksByFormId(form.id);
 
 	return {
-		form: formRes?.data?.form ?? null,
+		form,
 		blocks: blocksRes?.data?.blocks ?? []
 	};
 }
