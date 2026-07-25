@@ -1,11 +1,12 @@
 <script>
-  let { form = $bindable(), open = $bindable(false) } = $props();
+  let { open } = $props();
   import { loadGoogleFont } from "$lib/fontLoader";
   import X from "@lucide/svelte/icons/x";
   import { Dropdown } from "$lib/ui/";
   import { ImageUploader } from "$lib/ui";
-
-  const googleFonts = [
+  import { formState } from "$lib/state/form.svelte.js";
+  
+const googleFonts = [
     // UI / modern system
     "Inter",
     "Roboto",
@@ -37,6 +38,8 @@
     "JetBrains Mono",
     "IBM Plex Mono",
   ];
+
+let form = $derived(formState.form);
 
   $effect(() => {
     const font = form?.meta?.fontFamily;

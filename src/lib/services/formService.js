@@ -289,4 +289,25 @@ export async function deleteBlockById(blockId) {
   if (!data?.length) return apiError("Block not found");
 
   return apiSuccess({ id: data[0].id });
+
+}
+
+
+// Bulk update block positions (and optionally meta) in a single request
+export async function updateBlocks(blocks) {
+  if (!blocks?.length) return apiError("No blocks to reorder");
+
+  const payload = blocks.map(({ id, form_id, position, meta }) => ({
+    id,
+    form_id,
+    position,
+    meta
+  }));
+
+  const { data, error } = await supabase
+    .from("blocks")
+    .upsert(payload, { onConflict: "id" })
+    .select();
+
+  return error ? apiError(error) : apiSuccess({ blocks: data });
 }

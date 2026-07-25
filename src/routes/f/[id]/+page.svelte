@@ -1,31 +1,45 @@
+<!-- src/routes/(wherever)/[id]/+page.svelte -->
 <script>
 	import { onMount } from 'svelte';
 	import { fade, fly } from 'svelte/transition';
 	import { ArrowDown, ArrowUp } from '@lucide/svelte';
 	import { FormView } from '$lib/form-builder';
 	import { SplashScreen } from '$lib/ui';
-	import { getForm, incrementFormViews, getBlocksByFormId } from '$lib/services/formService.js';
+	import { incrementFormViews } from '$lib/services/formService.js';
 	import { createResponse } from '$lib/services/responseService.js';
- 	import { validateBlock } from '$lib/utils/validation.js';
-        import { page } from '$app/state';   
-        const formId = $derived(page.params.id);
-        import { supabase } from '$lib/supabaseClient'
+	import { validateBlock } from '$lib/utils/validation.js';
+	import { page } from '$app/state';
+	import { supabase } from '$lib/supabaseClient';
 
+	// 1. Receive data pre-loaded by +page.js
+	let { data } = $props();
+
+	// 2. Read-only form metadata
+	let form = $derived(data.form);
+	let formId = $derived(page.params.id);
+
+	// 3. Mutable reactive state for blocks so bind:block works
+	let blocks = $state(data.blocks ? [...data.blocks] : []);
+	let blockNo = $state(0);
 	let showSplash = $state(true);
 	let errorMessage = $state('');
-	let blocks = $state([]);
-	let blockNo = $state(0);
 	let submitted = $state(false);
-	let form = $state(null);
 
 	let direction = $state('bottom');
 	let flyParams = $state({});
-	let firstBlockLoaded = $state(false);
+
+	// Keep blocks updated if data prop re-hydrates or changes
+	$effect(() => {
+		if (data.blocks && data.blocks.length > 0) {
+			blocks = [...data.blocks];
+		}
+	});
 
 	// -----------------------------
 	// ANIMATION CONFIG
 	// -----------------------------
 	function updateFlyParams() {
+		if (typeof window === 'undefined') return;
 		const vh = window.innerHeight;
 		const offsetMultiplier = 1.5;
 
@@ -38,49 +52,23 @@
 	}
 
 	onMount(() => {
-		setTimeout(() => (showSplash = false), 3000);
+		const splashTimer = setTimeout(() => (showSplash = false), 3000);
 
-		loadForm();
+		if (form?.id) {
+			incrementFormViews(form.id).catch(() => {});
+		}
+
 		updateFlyParams();
 
 		window.addEventListener('resize', updateFlyParams);
 		window.addEventListener('orientationchange', updateFlyParams);
 
 		return () => {
+			clearTimeout(splashTimer);
 			window.removeEventListener('resize', updateFlyParams);
 			window.removeEventListener('orientationchange', updateFlyParams);
 		};
 	});
-
-	// -----------------------------
-	// LOAD FORM
-	// -----------------------------
-	async function loadForm() {
-		const formRes = await getForm(formId);
-
-		if (!formRes.success) {
-			errorMessage = formRes.error;
-			return;
-		}
-
-		form = formRes.data.form;
-
-		incrementFormViews(form.id);
-
-		const blocksRes = await getBlocksByFormId(form.id);
-
-		if (!blocksRes.success) {
-			errorMessage = blocksRes.error;
-			return;
-		}
-
-		blocks = blocksRes.data.blocks
-			.slice()
-			.sort((a, b) => a.meta.blockTypeId - b.meta.blockTypeId);
-
-		blockNo = 0;
-		firstBlockLoaded = true;
-	}
 
 	// -----------------------------
 	// RESPONSES
@@ -90,14 +78,21 @@
 			.filter((b) => b.value != null)
 			.map((b) => ({
 				blockId: b.id,
-				blockTypeId: b.meta.blockTypeId,
-				question: b.meta.question,
+				blockTypeId: b.meta?.blockTypeId,
+				question: b.meta?.question || b.meta?.title,
 				answer: b.value
 			}));
 
-		await createResponse(formId, responses);
-                const { data, error } = await 
-                supabase.functions.invoke("send-submission-notification",{ body: { formId: form.id } });
+		if (formId) {
+			await createResponse(formId, responses);
+		}
+
+		if (form?.id) {
+			await supabase.functions.invoke('send-submission-notification', {
+				body: { formId: form.id }
+			});
+		}
+
 		submitted = true;
 	}
 
@@ -108,8 +103,9 @@
 		errorMessage = '';
 
 		const block = blocks[blockNo];
+		if (!block) return;
 
-		if (block.type !== 'thankyou') {
+		if (block.meta?.component !== 'ThankYou' && block.type !== 'thankyou') {
 			const err = validateBlock(block);
 			if (err) {
 				errorMessage = err;
@@ -137,10 +133,6 @@
 	}
 </script>
 
-<!--
-  🔥 CRITICAL FIX:
-  Use 100dvh + flex column so scroll is stable across browsers/mobile
--->
 <main class="h-[100dvh] w-full flex flex-col relative overflow-hidden">
 
 	{#if showSplash}
@@ -150,45 +142,46 @@
 			</div>
 		</div>
 
-	{:else if errorMessage && blocks.length === 0}
+	{:else if !form || blocks.length === 0}
 		<div class="flex-1 flex items-center justify-center text-center text-red-600 text-lg px-4">
 			<div>
-				<p>{errorMessage}</p>
+				<p>{errorMessage || 'Unable to load form or this form has no questions.'}</p>
 				<p class="text-sm text-gray-500 mt-2">
 					Please check the link or try again later.
 				</p>
 			</div>
 		</div>
 
-	{:else if firstBlockLoaded}
+	{:else}
 
-		<!-- FORM AREA (stable viewport container) -->
-
-			{#key blockNo}
-
-				<div in:fly={flyParams} class="w-full h-full flex items-center justify-center">
+		<!-- FORM VIEWPORT AREA -->
+		{#key blockNo}
+			<div in:fly={flyParams} class="w-full h-full flex items-center justify-center">
+				{#if blocks[blockNo]}
 					<FormView
-						form={form}
-						canAnswer={true}
+						form ={data.form}
 						bind:block={blocks[blockNo]}
+						canAnswer={true}
 						{errorMessage}
 						{nextBlock}
 					/>
-				</div>
-			{/key}
+				{/if}
+			</div>
+		{/key}
 
 	{/if}
 
-	<!-- NAVIGATION UI -->
+	<!-- NAVIGATION CONTROLS -->
 	<div class="absolute bottom-10 right-10 z-10 flex gap-4 items-center">
 
-		{#if !submitted}
+		{#if !submitted && blocks.length > 0}
 			<div class="flex gap-2 items-center">
 
 				{#if blockNo > 0}
 					<button
-						on:click={previousBlock}
+						onclick={previousBlock}
 						class="w-8 h-8 bg-gray-800 text-white rounded-md hover:bg-gray-700 flex items-center justify-center"
+						aria-label="Previous question"
 					>
 						<ArrowUp size={16} />
 					</button>
@@ -196,8 +189,9 @@
 
 				{#if blockNo < blocks.length - 2}
 					<button
-						on:click={nextBlock}
+						onclick={nextBlock}
 						class="w-8 h-8 bg-gray-800 text-white rounded-md hover:bg-gray-700 flex items-center justify-center"
+						aria-label="Next question"
 					>
 						<ArrowDown size={16} />
 					</button>
@@ -209,6 +203,7 @@
 		<a
 			href="https://fabform.io"
 			target="_blank"
+			rel="noreferrer"
 			class="bg-black text-white text-sm flex items-center gap-2 py-1 px-4 rounded-md hover:bg-gray-800"
 		>
 			<span class="text-gray-300">Powered by</span>

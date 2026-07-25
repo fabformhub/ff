@@ -1,63 +1,81 @@
 <script>
-  import { getComponent } from '$lib/utils/getComponent.js';
+  import { blockRegistry } from '$lib/utils/blockRegistry.js';
   import AlertTriangle from '@lucide/svelte/icons/alert-triangle';
 
   let {
-    block,
-    form,
+    block = {},
+    form = {},
     canAnswer = false,
     onFormButtonClick,
     errorMessage = '',
     textAlign = 'center'
   } = $props();
-  const SvelteComponent = $derived(getComponent(block?.meta?.component));
+
+  const blockType = $derived(block?.meta?.type);
+
+  // Look up Svelte component directly in blockRegistry
+  const SvelteComponent = $derived(
+    blockRegistry.find((item) => item.type === blockType)?.component
+  );
+
   const formMeta = $derived(form?.meta);
   const isLeft = $derived(textAlign === 'left');
+
+  // String check against registry type
+  const isThankYouBlock = $derived(blockType === 'thank-you');
+
+  // Handle both flat registry schema and legacy meta schema seamlessly
+  const questionOrTitle = $derived(
+    block?.question || block?.title || block?.meta?.question || block?.meta?.title
+  );
+  const description = $derived(block?.description || block?.meta?.description);
+  const buttonText = $derived(block?.buttonText || block?.meta?.buttonText);
+  const blockProps = $derived(block?.props || block?.meta?.props || {});
 </script>
 
 <!-- OUTER: FULL SCREEN + PROPER CENTERING SYSTEM -->
-<div class="relative w-full px-6 py-10 flex">
-
+<div class="relative flex w-full px-6 py-10">
 
   <!-- HORIZONTAL ALIGNMENT LAYER -->
-  <div class={`w-full flex ${isLeft ? 'justify-start' : 'justify-center'}`}>
+  <div class={`flex w-full ${isLeft ? 'justify-start' : 'justify-center'}`}>
     <!-- CONTENT COLUMN -->
-    <div class="w-full max-w-md flex flex-col gap-5">
+    <div class="flex w-full max-w-md flex-col gap-5">
 
-      {#if block.meta.question || block.meta.title}
+      {#if questionOrTitle}
         <p
           class="block w-full text-2xl font-medium leading-tight"
           class:text-left={isLeft}
           class:text-center={!isLeft}
           style={`color: ${formMeta?.questionColor};`}
         >
-          {block.meta.question || block.meta.title}
+          {questionOrTitle}
         </p>
       {/if}
 
-      {#if block?.meta?.description}
+      {#if description}
         <p
           class="block w-full text-base opacity-80 leading-relaxed"
           class:text-left={isLeft}
           class:text-center={!isLeft}
           style={`color: ${formMeta?.questionColor};`}
         >
-          {block.meta.description}
+          {description}
         </p>
       {/if}
 
       {#if SvelteComponent}
         <div class="w-full">
           <SvelteComponent
-            form={form}
+            {form}
             bind:value={block.value}
-            canAnswer={canAnswer}
-            {...block?.meta?.props}
+            {canAnswer}
+            {...blockProps}
           />
         </div>
       {/if}
 
-      {#if block?.meta?.blockTypeId !== 99}
+      <!-- Render button for all blocks except thank-you -->
+      {#if !isThankYouBlock}
         <div class={`flex ${isLeft ? 'justify-start' : 'justify-center'}`}>
           <button
             type="button"
@@ -68,7 +86,7 @@
               color: ${formMeta?.buttonTextColor};
             `}
           >
-            {block?.meta?.buttonText || 'button text missing for this component'}
+            {buttonText || 'Next'}
           </button>
         </div>
       {/if}
@@ -83,4 +101,3 @@
     </div>
   </div>
 </div>
-

@@ -2,18 +2,17 @@
   import { BlockView } from '.';
 
   let {
-    form,
-    block,
+    form = null,
+    block = $bindable(null),
     canAnswer = false,
     nextBlock = () => {},
     errorMessage = ''
   } = $props();
 
   const layout = $derived(block?.meta?.coverImageProps?.layout);
-  const coverImage  = $derived(block?.meta?.coverImageProps?.coverImage);
+  const coverImage = $derived(block?.meta?.coverImageProps?.coverImage);
   const formBgImage = $derived(form?.meta?.bgImage);
   const formBgColor = $derived(form?.meta?.bgColor);
-
 
   const fontSizeClass = $derived(
     {
@@ -29,26 +28,28 @@
 </script>
 
 {#snippet blockContent()}
-  <BlockView
-    form={form}
-    bind:block={block}
-    canAnswer= {canAnswer}
-    onFormButtonClick={nextBlock}
-    {errorMessage}
-    textAlign={block?.meta?.textAlign ?? 'center'}
-  />
+  {#if block}
+    <BlockView
+      {form}
+      bind:block
+      {canAnswer}
+      onFormButtonClick={nextBlock}
+      {errorMessage}
+      textAlign={block?.meta?.textAlign ?? 'center'}
+    />
+  {/if}
 {/snippet}
 
 <div
   class={`w-full min-h-screen ${fontSizeClass}`}
-  style={`background-color:${formBgColor};
-         background-image:url('${formBgImage}');
+  style={`background-color:${formBgColor ?? 'transparent'};
+         background-image:url('${formBgImage ?? ''}');
          background-repeat:no-repeat;
          background-size:cover;
          background-position:center;`}
 >
 
-{#if layout === 'wallpaper' || layout ===""}
+{#if layout === 'wallpaper' || layout === "" || !layout}
 
   <div
     class={`w-full min-h-screen bg-cover bg-center bg-no-repeat ${fontSizeClass}`}
@@ -60,7 +61,7 @@
       {@render blockContent()}
     </div>
 
-    </div>
+  </div>
 {:else}
 
   <!-- All other layouts use the form background -->
