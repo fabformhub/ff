@@ -24,10 +24,13 @@
 	let showDesign = $state(false);
 	let showBlockPicker = $state(false);
 
-	setFormState(data.form, data.blocks);
+	
+         setFormState(data.form, data.blocks);
 
 	const formId = $derived(page.params.id);
 
+//   when a block gets picked addBlock is called
+//
 
 	async function handleDeleteBlock(id) {
 		const confirmed = await openDialog(
@@ -70,6 +73,7 @@ $effect(() => {
 <BlockPicker
 	show={showBlockPicker}
 	close={() => showBlockPicker = false}
+        onPick={addBlock}
 />
 
 

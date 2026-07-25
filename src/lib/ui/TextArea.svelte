@@ -1,10 +1,14 @@
 <script>
-    let { value = $bindable(), ...props } = $props();
-  </script>
-  
-  <textarea
-    bind:value={value} autofocus
-    {...props}
-    rows="4"
-    class="my-2 block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-  ></textarea>
+	let { value = $bindable(), ...props } = $props();
+</script>
+
+<textarea
+	bind:value
+	autofocus
+	{...props}
+	rows="4"
+	class="my-2 block w-full rounded-lg border-2 border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900
+	       shadow-md outline-none transition-colors
+	       hover:border-gray-400
+	       focus:border-indigo-500 focus:bg-white"
+></textarea>

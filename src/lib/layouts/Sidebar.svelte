@@ -17,15 +17,21 @@
   const WELCOME_TYPE_ID = 1;
   const THANK_YOU_TYPE_ID = 99;
 
-  // Welcome and Thank You are fixed-position blocks: always first/last,
-  // never draggable. Everything else is a normal, reorderable block.
-  function isFixedBlock(block) {
-    return block.meta.blockTypeId === WELCOME_TYPE_ID || block.meta.blockTypeId === THANK_YOU_TYPE_ID;
-  }
+function isFixedBlock(block) {
+  const typeId = block?.meta?.blockTypeId;
+  return typeId === WELCOME_TYPE_ID || typeId === THANK_YOU_TYPE_ID;
+}
 
-  let welcomeBlock = $derived(blocks.find(b => b.meta.blockTypeId === WELCOME_TYPE_ID));
-  let thankYouBlock = $derived(blocks.find(b => b.meta.blockTypeId === THANK_YOU_TYPE_ID));
-  let normalBlocks = $derived(blocks.filter(b => !isFixedBlock(b)));
+let welcomeBlock = $derived(
+  blocks.find(b => b?.meta?.blockTypeId === WELCOME_TYPE_ID)
+);
+
+let thankYouBlock = $derived(
+  blocks.find(b => b?.meta?.blockTypeId === THANK_YOU_TYPE_ID)
+);
+
+let normalBlocks = $derived(blocks.filter(b => !isFixedBlock(b)));
+
 
   function selectBlock(block) {
     const i = blocks.findIndex(b => b.id === block.id);
@@ -33,12 +39,11 @@
     changeBlock(i);
   }
 
-  function getRegistry(block) {
-    return blockRegistry.find(r => r.blockTypeId === block.meta.blockTypeId);
-  }
+function getRegistry(block) {
+  if (!block?.meta?.blockTypeId) return null;
+  return blockRegistry.find(r => r.blockTypeId === block.meta.blockTypeId);
+}
 
-  // Only normal blocks pass through the dndzone, so dragging can only
-  // ever reorder them - Welcome/Thank You stay pinned at the ends.
   function handleDndConsider(e) {
     normalBlocks = e.detail.items;
   }

@@ -1,16 +1,14 @@
 <script>
-
-  import { getContext } from 'svelte';
   import { blockRegistry} from "$lib/utils/blockRegistry.js";
   import { X } from '@lucide/svelte';
 
-  const { show, close } = $props();
-  const notifyBlockPick = getContext('blockPickerClick') ?? (() => {});
+  const { show, close,onPick } = $props();
 
-  function BlockPicked(block) {
-    notifyBlockPick(block);
+    function BlockPicked(block) {
+      onPick?.(block);
     close();
   }
+
 
   function handleKeyDown(e) {
     if (e.key === 'Escape') close();

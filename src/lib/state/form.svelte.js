@@ -39,20 +39,44 @@ export function selectBlock(index) {
 
 
 export async function addBlock(block) {
-	const result = await createBlock(
-		formState.form.id,
-		block
-	);
+	if (!formState.form?.id || !block) return;
 
-	const newBlock = result?.data?.block ?? block;
+	const template = {
+		blockTypeId: block.blockTypeId,
+		title: block.label,
+		question: block.question,
+		description: block.description,
+		buttonText: block.buttonText,
+		validation: block.validation ?? {},
+		props: block.props ?? {},
+		coverImageProps: block.coverImageProps ?? {}
+	};
 
-	formState.blocks.push(newBlock);
+	try {
+		const result = await createBlock(
+			formState.form.id,
+			template
+		);
 
-	formState.blockNo = formState.blocks.length - 1;
+		const createdBlock = result?.data?.block;
+
+		if (!createdBlock?.id) {
+			throw new Error("Created block missing id");
+		}
+
+		formState.blocks.push(createdBlock);
+
+		formState.blockNo = formState.blocks.length - 1;
+
+	} catch (error) {
+		console.error("Failed to create block:", error);
+	}
 }
 
-
 export async function deleteBlock(blockId) {
+	const previousBlocks = [...formState.blocks];
+
+	// Optimistic remove
 	formState.blocks = formState.blocks.filter(
 		block => block.id !== blockId
 	);
@@ -64,7 +88,15 @@ export async function deleteBlock(blockId) {
 		);
 	}
 
-	await deleteBlockById(blockId);
+	try {
+		await deleteBlockById(blockId);
+
+	} catch (error) {
+		console.error("Failed to delete block:", error);
+
+		// Restore if delete failed
+		formState.blocks = previousBlocks;
+	}
 }
 
 
@@ -101,7 +133,6 @@ const save = debounce(async () => {
 		await updateBlock(block);
 		lastBlockSnapshot = blockSnapshot;
 	}
-
 
 }, 1500);
 

@@ -216,31 +216,34 @@ export async function getFormViews(formId) {
    BLOCK FUNCTIONS 
 --------------------------------------------- */
 
+
 // Create a block
 export async function createBlock(formId, template) {
-  const meta = { ...template };
+	const meta = { ...template };
 
-  const { data: lastBlock } = await supabase
-    .from("blocks")
-    .select("position")
-    .eq("form_id", formId)
-    .order("position", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+	const { data: lastBlock } = await supabase
+		.from("blocks")
+		.select("position")
+		.eq("form_id", formId)
+		.order("position", { ascending: false })
+		.limit(1)
+		.maybeSingle();
 
-  const nextPosition = lastBlock ? lastBlock.position + 1 : 0;
+	const nextPosition = lastBlock ? lastBlock.position + 1 : 0;
 
-  const { data, error } = await supabase
-    .from("blocks")
-    .insert({
-      form_id: formId,
-      position: nextPosition,
-      meta,
-    })
-    .select()
-    .single();
+	const { data, error } = await supabase
+		.from("blocks")
+		.insert({
+			form_id: formId,
+			position: nextPosition,
+			meta
+		})
+		.select()
+		.single();
 
-  return error ? apiError(error) : apiSuccess({ blockId: data.id });
+	return error
+		? apiError(error)
+		: apiSuccess({ block: data });
 }
 
 // Get blocks for a form
