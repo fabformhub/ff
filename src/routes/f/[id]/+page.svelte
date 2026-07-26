@@ -65,35 +65,43 @@
 	// -----------------------------
 	// RESPONSES
 	// -----------------------------
-	async function submitResponses() {
-		const responses = blocks
-			.filter((b) => b.value != null)
-			.map((b) => ({
-				blockId: b.id,
-				type: b.meta?.type, // Updated from blockTypeId -> type
-				question: b.meta?.question || b.meta?.title,
-				answer: b.value
-			}));
 
 
-if (form.id) {
-    const res = await createResponse(form.id, responses);
+// -----------------------------
+// RESPONSES
+// -----------------------------
+async function submitResponses() {
+    const formId = form?.id;
+
+    if (!formId) {
+        console.error("Cannot submit: form.id is missing or undefined.");
+        errorMessage = "Form configuration error. Please refresh and try again.";
+        return;
+    }
+
+    const responses = blocks
+        .filter((b) => b.value != null)
+        .map((b) => ({
+            blockId: b.id,
+            type: b.meta?.type,
+            question: b.meta?.question || b.meta?.title,
+            answer: b.value
+        }));
+
+    const res = await createResponse(formId, responses);
 
     if (!res.success) {
         console.error("Failed to save response:", res.error);
+        errorMessage = "Failed to save your response. Please try again.";
+        return; // Stop execution here so user can retry!
     }
 
-    await supabase.functions.invoke('send-submission-notification', {
-        body: { formId: form.id }
-    });
-} else {
-    console.error("Cannot submit: form.id is missing or undefined.");
+    supabase.functions.invoke('send-submission-notification', {
+        body: { formId }
+    }).catch((err) => console.error("Notification function failed:", err));
+
+    submitted = true;
 }
-		}
-
-		submitted = true;
-	}
-
 	// -----------------------------
 	// NAVIGATION
 	// -----------------------------
