@@ -16,7 +16,6 @@
 
 	// 2. Read-only form metadata
 	let form = $derived(data.form);
-	let formId = $derived(page.params.id);
 
 	// 3. Mutable reactive state for blocks using $derived for immediate sync
 	let blocks = $derived(data.blocks ? [...data.blocks] : []);
@@ -76,14 +75,20 @@
 				answer: b.value
 			}));
 
-		if (formId) {
-			await createResponse(formId, responses);
-		}
 
-		if (form?.id) {
-			await supabase.functions.invoke('send-submission-notification', {
-				body: { formId: form.id }
-			});
+if (form.id) {
+    const res = await createResponse(form.id, responses);
+
+    if (!res.success) {
+        console.error("Failed to save response:", res.error);
+    }
+
+    await supabase.functions.invoke('send-submission-notification', {
+        body: { formId: form.id }
+    });
+} else {
+    console.error("Cannot submit: form.id is missing or undefined.");
+}
 		}
 
 		submitted = true;
