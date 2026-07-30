@@ -1,11 +1,8 @@
-// answers.svelte.js
-//
-// Shared reactive state: a simple list of previous answers you can insert
-// again later. `key` is what you type after "@" to find it; `value` is the
-// answer itself. Starts empty.
-
 class AnswersStore {
-  items = $state([]);
+  items = $state([  
+{ key: 'geoff', value: 'Geoffrey Callaghan' },
+{ key: 'team', value: 'Fabform Team' }
+]);
 
   add(key, value) {
     key = (key ?? '').trim();

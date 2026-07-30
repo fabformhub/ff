@@ -1,6 +1,6 @@
 <script>
 	import { formState } from "$lib/state/form.svelte.js";
-	import { Input, TextArea, Checkbox, Dropdown, ImageUploader } from "$lib/ui";
+	import { Input, MentionInput, TextArea, Checkbox, Dropdown, ImageUploader } from "$lib/ui";
 	import { AlignmentControl, ChoicesEditor } from ".";
 
 	let block = $derived(formState.blocks[formState.blockNo]);
@@ -24,12 +24,12 @@
 			{#if 'title' in meta}
 				<div>
 					<label class="block text-sm font-medium text-gray-700 mb-1.5">Title</label>
-					<Input bind:value={block.meta.title} />
+					<MentionInput bind:value={block.meta.title} />
 				</div>
 			{:else if 'question' in meta}
 				<div>
 					<label class="block text-sm font-medium text-gray-700 mb-1.5">Question</label>
-					<Input bind:value={block.meta.question} />
+					<MentionInput bind:value={block.meta.question} />
 				</div>
 			{/if}
 
