@@ -1,4 +1,3 @@
-
 export { default as Input } from './Input.svelte';
 export { default as TextArea } from './TextArea.svelte';
 export { default as AddBlockButton } from './AddBlockButton.svelte';
@@ -18,3 +17,4 @@ export { default as CopyCode } from './CopyCode.svelte';
 export { default as Popover } from './Popover.svelte';
 export { default as Portal } from './Portal.svelte';
 export { default as ImageUploader } from './ImageUploader.svelte';
+export { default as MentionInput } from './MentionInput.svelte';
