@@ -5,13 +5,22 @@
   let newKey = $state('');
   let newValue = $state('');
   let resolvedText = $state('');
+  let errorMessage = $state('');
 
   function handleAdd(e) {
     e.preventDefault();
-    if (!newKey.trim() || !newValue.trim()) return;
-    answersStore.add(newKey, newValue);
-    newKey = '';
-    newValue = '';
+    const key = newKey.trim();
+    const value = newValue.trim();
+    if (!key || !value) return;
+
+    try {
+      answersStore.set(key, value);
+      newKey = '';
+      newValue = '';
+      errorMessage = '';
+    } catch (err) {
+      errorMessage = err.message;
+    }
   }
 
   function handleUpdate(result) {
@@ -37,10 +46,17 @@
       placeholder="Answer"
       bind:value={newValue}
     />
-    <button class="px-3.5 py-1.5 bg-violet-600 hover:bg-violet-700 text-white rounded-md text-sm font-semibold" type="submit">
+    <button
+      class="px-3.5 py-1.5 bg-violet-600 hover:bg-violet-700 text-white rounded-md text-sm font-semibold"
+      type="submit"
+    >
       Add
     </button>
   </form>
+
+  {#if errorMessage}
+    <p class="mt-2 text-sm text-red-600">{errorMessage}</p>
+  {/if}
 
   <p class="mt-4 text-sm text-gray-600">{resolvedText}</p>
 </div>

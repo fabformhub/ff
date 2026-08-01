@@ -1,6 +1,7 @@
 <script>
   import { blockRegistry } from '$lib/utils/blockRegistry.js';
   import AlertTriangle from '@lucide/svelte/icons/alert-triangle';
+  import { answersStore } from '$lib/state/answers.svelte.js';
 
   let {
     block = {},
@@ -24,10 +25,9 @@
   // String check against registry type
   const isThankYouBlock = $derived(blockType === 'thank-you');
 
-  // Handle both flat registry schema and legacy meta schema seamlessly
-  const questionOrTitle = $derived(
-    block?.question || block?.title || block?.meta?.question || block?.meta?.title
-  );
+const questionOrTitle = $derived(
+  answersStore.resolve(block?.question || block?.title || block?.meta?.question || block?.meta?.title)
+);
   const description = $derived(block?.description || block?.meta?.description);
   const buttonText = $derived(block?.buttonText || block?.meta?.buttonText);
   const blockProps = $derived(block?.props || block?.meta?.props || {});

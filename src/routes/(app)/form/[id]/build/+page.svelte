@@ -63,7 +63,7 @@
 			/>
 
 			<Sidebar
-				OnDeleteBlock={handleDeleteBlock}
+				onDeleteBlock={handleDeleteBlock}
 			/>
 
 		</div>
