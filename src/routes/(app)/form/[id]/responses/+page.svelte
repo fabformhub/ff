@@ -365,14 +365,7 @@
             <Link2 class="w-4 h-4" />
             <span>Copy form link</span>
           </button>
-          <a
-            href={`/forms/${formId}/edit`}
-            class="flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-sm font-semibold text-[#5C6685] hover:text-[#1B2140] transition-colors"
-          >
-            <Eye class="w-4 h-4" />
-            Preview form
-          </a>
-        </div>
+          </div>
       </div>
 
     <!-- Response list -->
