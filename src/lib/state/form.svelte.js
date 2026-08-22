@@ -29,9 +29,9 @@ export function selectBlock(index) {
 	formState.blockNo = index;
 }
 
+
 export async function addBlock(block) {
 	if (!formState.form?.id || !block) return;
-
 	const template = {
 		type: block.type,
 		[block.question ? 'question' : 'title']: block.question || block.label,
@@ -42,14 +42,21 @@ export async function addBlock(block) {
 		coverImageProps: block.coverImageProps
 	};
 
+	let insertAt = formState.blocks.findIndex(
+		b => b.meta?.type === 'thank-you' || b.meta?.component === 'ThankYou'
+	);
+	if (insertAt === -1) insertAt = formState.blocks.length;
+
 	try {
-		const result = await createBlock(formState.form.id, template);
+		const result = await createBlock(formState.form.id, template, insertAt);
 		const createdBlock = result?.data?.block;
 		if (!createdBlock?.id) throw new Error("Created block missing id");
 
-		formState.blocks.push(createdBlock);
+		formState.blocks.splice(insertAt, 0, createdBlock);
+		if (formState.blocks[insertAt + 1]) formState.blocks[insertAt + 1].position = insertAt + 1;
+
 		blockSnapshots.set(createdBlock.id, JSON.stringify(createdBlock));
-		formState.blockNo = formState.blocks.length - 1;
+		formState.blockNo = insertAt;
 	} catch (error) {
 		console.error("Failed to create block:", error);
 	}
