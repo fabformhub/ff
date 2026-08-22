@@ -113,6 +113,7 @@ async function submitResponses() {
 
 		// Check against string type 'thank-you'
 		if (block.meta?.component !== 'ThankYou' && block.meta?.type !== 'thank-you') {
+
 			const err = validateBlock(block);
 			if (err) {
 				errorMessage = err;
