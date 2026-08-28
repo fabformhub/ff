@@ -2,37 +2,46 @@
 	import { goto } from "$app/navigation";
 	import { toast } from "svelte-sonner";
 	import { saveEmailSettings } from "$lib/services/emailSettingsService";
-	import { Mail, Eye, EyeOff, Loader2, Pause } from "@lucide/svelte";
+	import { Mail, Loader2, Pause, Sparkles } from "@lucide/svelte";
 
 	let { params, data } = $props();
-
 	const formId = params.id;
 	const MESSAGE_LIMIT = 500;
 
-        let enabled = $state(data.emailSettings?.enabled ?? false);
+	let enabled = $state(data.emailSettings?.enabled ?? false);
 	let subject = $state(data.emailSettings?.subject ?? "");
 	let message = $state(data.emailSettings?.message ?? "");
 	let saving = $state(false);
-	let showPreview = $state(false);
 	let activeField = $state("message");
-
 	let subjectEl = $state();
 	let messageEl = $state();
 
-	function insertToken(field) {
-		const token = `{{${field}}}`;
+	// If your loader passes the form's question list (e.g. data.fields =
+	// [{ question: "Email address" }, ...]), surface real field chips here.
+	// Falls back to common examples when that's not available.
+	const fieldChips = (data.fields ?? []).map((f) => {
+		const key = f.question
+			.trim()
+			.toLowerCase()
+			.replace(/[^a-z0-9]+/g, "_")
+			.replace(/^_+|_+$/g, "");
+		return { label: f.question, token: `@${key}` };
+	});
+
+	const suggestedChips =
+		fieldChips.length > 0 ? fieldChips : [{ label: "Email", token: "@email" }, { label: "Name", token: "@name" }];
+
+	function insertToken(token) {
 		const el = activeField === "subject" ? subjectEl : messageEl;
 		const current = activeField === "subject" ? subject : message;
 		const start = el?.selectionStart ?? current.length;
 		const end = el?.selectionEnd ?? current.length;
 		const next = current.slice(0, start) + token + current.slice(end);
-
 		if (activeField === "subject") {
 			subject = next;
 		} else {
 			message = next;
 		}
-
 		requestAnimationFrame(() => {
 			el?.focus();
 			const pos = start + token.length;
@@ -40,10 +49,8 @@
 		});
 	}
 
-
 	async function save() {
 		saving = true;
-
 		try {
 			await saveEmailSettings({ formId, enabled, subject, message });
 			toast.success("Email settings saved");
@@ -67,13 +74,12 @@
 
 <div class="min-h-screen flex items-center justify-center bg-[#F5FAFF] p-4 sm:p-6 font-sans selection:bg-[#FFE4A8]">
 	<div class="absolute inset-0 overflow-hidden pointer-events-none opacity-40">
-	<div class="absolute -top-[35%] left-[15%] w-[600px] h-[600px] rounded-full bg-gradient-to-tr from-[#FF6B4A]/20 to-[#FFC94D]/20 blur-[120px]"></div>
+		<div class="absolute -top-[35%] left-[15%] w-[600px] h-[600px] rounded-full bg-gradient-to-tr from-[#FF6B4A]/20 to-[#FFC94D]/20 blur-[120px]"></div>
 		<div class="absolute -bottom-[35%] right-[15%] w-[600px] h-[600px] rounded-full bg-gradient-to-br from-[#6C63FF]/15 to-[#22B573]/10 blur-[120px]"></div>
 	</div>
 
 	<div class="relative w-full max-w-[560px] bg-white border border-[#E3ECFA] shadow-[0_8px_30px_rgb(27,33,64,0.06)] rounded-2xl p-8 sm:p-10 transition-all duration-300">
 		<span class="absolute -top-[5px] left-10 w-[10px] h-[10px] rounded-full bg-[#FF6B4A] shadow-[0_2px_4px_rgba(0,0,0,0.15)]"></span>
-
 
 		<!-- Header -->
 		<div class="flex items-center gap-4 mb-8">
@@ -99,7 +105,6 @@
 					</span>
 				{/if}
 			</div>
-
 			<button
 				type="button"
 				role="switch"
@@ -110,6 +115,20 @@
 			>
 				<span class="inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform duration-200 {enabled ? 'translate-x-6' : 'translate-x-1'}"></span>
 			</button>
+		</div>
+
+		<!-- Variable hint -->
+		<div class="flex items-start gap-2.5 rounded-xl bg-[#F5FAFF] border border-[#E3ECFA] px-4 py-3 mb-5 transition-opacity duration-200 {enabled ? '' : 'opacity-50 pointer-events-none'}">
+			<Sparkles size={15} strokeWidth={2} class="text-[#6C63FF] shrink-0 mt-0.5" />
+			<p class="text-xs leading-relaxed text-[#5C6685]">
+				<span class="font-semibold text-[#1B2140]">Pull in answers with @</span> — type
+				<code class="rounded bg-white border border-[#E3ECFA] px-1 py-0.5 text-[11px] font-mono text-[#6C63FF]">@email</code>
+				or
+				<code class="rounded bg-white border border-[#E3ECFA] px-1 py-0.5 text-[11px] font-mono text-[#6C63FF]">@name</code>
+				to insert a submitted answer, or
+				<code class="rounded bg-white border border-[#E3ECFA] px-1 py-0.5 text-[11px] font-mono text-[#6C63FF]">@all</code>
+				to list every response.
+			</p>
 		</div>
 
 		<!-- Fields -->
@@ -157,7 +176,29 @@
 				</span>
 			</div>
 
-			
+			<!-- Insert chips -->
+			<div class="flex flex-wrap items-center gap-1.5 pt-1">
+				<span class="text-[11px] font-medium text-[#97A0BC] mr-1">Insert:</span>
+				<button
+					type="button"
+					onclick={() => insertToken("@all")}
+					class="rounded-full border border-[#6C63FF]/30 bg-[#6C63FF]/5 px-2.5 py-1 text-[11px] font-mono font-medium text-[#6C63FF] hover:bg-[#6C63FF]/10 transition-colors duration-150"
+				>
+					@all
+				</button>
+				{#each suggestedChips as chip}
+					<button
+						type="button"
+						onclick={() => insertToken(chip.token)}
+						title={chip.label}
+						class="rounded-full border border-[#E3ECFA] bg-[#F5FAFF] px-2.5 py-1 text-[11px] font-mono font-medium text-[#5C6685] hover:border-[#6C63FF]/40 hover:text-[#6C63FF] transition-colors duration-150"
+					>
+						{chip.token}
+					</button>
+				{/each}
+			</div>
+		</div>
+
 		<!-- Save -->
 		<button
 			onclick={save}
@@ -174,5 +215,4 @@
 			{/if}
 		</button>
 	</div>
-</div>
 </div>
