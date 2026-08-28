@@ -97,8 +97,9 @@ async function submitResponses() {
     }
 
     supabase.functions.invoke('send-submission-notification', {
-        body: { formId }
+        body: { formId, responses }
     }).catch((err) => console.error("Notification function failed:", err));
+
 
     submitted = true;
 }
